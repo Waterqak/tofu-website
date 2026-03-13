@@ -5,7 +5,6 @@
 (function () {
     'use strict';
 
-    // ── Helpers ──────────────────────────────────────────────────────────
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => [...r.querySelectorAll(s)];
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -14,55 +13,169 @@
     const lerp  = (a, b, t) => a + (b - a) * t;
 
     // ═══════════════════════════════════════════════════════
-    // 1. NEBULA BACKGROUND
-    // Slow drifting aurora blobs painted on a canvas below stars
+    // 1. BIRTHDAY COUNTDOWN
+    // ═══════════════════════════════════════════════════════
+    (function initCountdown() {
+        const dEl = $('#cd-d'), hEl = $('#cd-h'), mEl = $('#cd-m'), sEl = $('#cd-s');
+        const msgEl = $('#bday-msg');
+        if (!dEl) return;
+
+        // Previous display values for bump animation
+        let prev = { d: -1, h: -1, m: -1, s: -1 };
+
+        function getTarget() {
+            const now  = new Date();
+            const year = now.getMonth() > 3 || (now.getMonth() === 3 && now.getDate() > 21)
+                       ? now.getFullYear() + 1
+                       : now.getFullYear();
+            return new Date(year, 3, 21, 0, 0, 0, 0);   // April = month 3
+        }
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function bump(el, val, key) {
+            if (prev[key] !== val) {
+                el.classList.remove('bump');
+                void el.offsetWidth;
+                el.classList.add('bump');
+                prev[key] = val;
+            }
+            el.textContent = pad(val);
+        }
+
+        // Birthday messages that rotate
+        const birthdayLines = [
+            "Today's the day. Happy birthday, Moon. 🎂",
+            "21 years of you and the world is better for it. 🌙",
+            "You made it to 21. That deserves a whole celebration.",
+            "Happy birthday. I hope today feels as good as you make me feel. 🌕",
+        ];
+        let bdayMsgIdx = 0;
+
+        function tick() {
+            const now  = new Date();
+            const tgt  = getTarget();
+            const diff = tgt - now;
+
+            if (diff <= 0) {
+                // It's her birthday!
+                dEl.textContent = '00';
+                hEl.textContent = '00';
+                mEl.textContent = '00';
+                sEl.textContent = '00';
+                msgEl.textContent = birthdayLines[bdayMsgIdx % birthdayLines.length];
+
+                if (diff > -86400000) {
+                    // Birthday day — fire confetti periodically
+                    spawnConfettiBurst();
+                    bdayMsgIdx = (bdayMsgIdx + 1) % birthdayLines.length;
+                }
+                return;
+            }
+
+            const totalSecs = Math.floor(diff / 1000);
+            const d = Math.floor(totalSecs / 86400);
+            const h = Math.floor((totalSecs % 86400) / 3600);
+            const m = Math.floor((totalSecs % 3600) / 60);
+            const s = totalSecs % 60;
+
+            bump(dEl, d, 'd');
+            bump(hEl, h, 'h');
+            bump(mEl, m, 'm');
+            bump(sEl, s, 's');
+
+            // Contextual message based on how close it is
+            if (d === 0 && h === 0) {
+                msgEl.textContent = "Any minute now. 🌙";
+            } else if (d === 0) {
+                msgEl.textContent = "It's today! Just a few hours left. 🎂";
+            } else if (d === 1) {
+                msgEl.textContent = "Tomorrow. I'm already excited for you.";
+            } else if (d <= 7) {
+                msgEl.textContent = `Only ${d} more days. I can't wait.`;
+            } else if (d <= 30) {
+                msgEl.textContent = `${d} days to go. It's coming up fast.`;
+            } else {
+                msgEl.textContent = "Counting down every single day. 🌕";
+            }
+        }
+
+        tick();
+        setInterval(tick, 1000);
+    })();
+
+    // ═══════════════════════════════════════════════════════
+    // 2. CONFETTI
+    // ═══════════════════════════════════════════════════════
+    function spawnConfettiBurst(count = 60) {
+        const container = $('#confetti-container');
+        if (!container) return;
+        const colors = ['#e8c96a', '#c4d8f5', '#f5a0c0', '#a0e0d0', '#ffffff', '#ffd700'];
+
+        for (let i = 0; i < count; i++) {
+            const c   = document.createElement('div');
+            c.className = 'confetti-piece';
+            const size = rand(5, 11);
+            const dur  = rand(2, 4.5);
+            const spin = rand(-720, 720);
+            c.style.cssText = `
+                left:${rand(10,90)}%;
+                top:-${size * 2}px;
+                width:${size}px;
+                height:${size * rand(0.4, 1.2)}px;
+                background:${colors[randInt(0, colors.length-1)]};
+                border-radius:${rand(0,4)}px;
+                animation-duration:${dur}s;
+                animation-delay:${rand(0, 1.5)}s;
+                --spin:${spin}deg;
+                transform:rotate(${rand(0,360)}deg);
+            `;
+            container.appendChild(c);
+            setTimeout(() => c.remove(), (dur + 2) * 1000);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // 3. NEBULA BACKGROUND
     // ═══════════════════════════════════════════════════════
     (function initNebula() {
         const canvas = $('#nebula-canvas');
         const ctx    = canvas.getContext('2d');
         let W, H, blobs = [], raf;
 
-        const BLOB_DEFS = [
-            { cx: 0.15, cy: 0.25, rx: 0.50, ry: 0.38, r:  60, g: 80,  b: 220, a: 0.055, sx: 0.00012, sy: 0.00008 },
-            { cx: 0.80, cy: 0.70, rx: 0.45, ry: 0.36, r:  80, g: 50,  b: 200, a: 0.048, sx:-0.00009, sy: 0.00011 },
-            { cx: 0.50, cy: 0.50, rx: 0.60, ry: 0.45, r:  30, g: 100, b: 180, a: 0.035, sx: 0.00008, sy:-0.00012 },
-            { cx: 0.85, cy: 0.20, rx: 0.38, ry: 0.30, r: 180, g: 140, b:  50, a: 0.038, sx:-0.00011, sy: 0.00007 },
-            { cx: 0.20, cy: 0.80, rx: 0.40, ry: 0.32, r:  50, g:  80, b: 210, a: 0.042, sx: 0.00010, sy:-0.00008 },
-            { cx: 0.65, cy: 0.35, rx: 0.35, ry: 0.28, r: 100, g: 160, b: 220, a: 0.030, sx:-0.00008, sy: 0.00013 },
+        const BLOBS = [
+            { cx:.15, cy:.25, rx:.50, ry:.38, r:60,  g:80,  b:220, a:.055 },
+            { cx:.80, cy:.70, rx:.45, ry:.36, r:80,  g:50,  b:200, a:.048 },
+            { cx:.50, cy:.50, rx:.60, ry:.45, r:30,  g:100, b:180, a:.035 },
+            { cx:.85, cy:.20, rx:.38, ry:.30, r:180, g:140, b:50,  a:.038 },
+            { cx:.20, cy:.80, rx:.40, ry:.32, r:50,  g:80,  b:210, a:.042 },
+            { cx:.65, cy:.35, rx:.35, ry:.28, r:100, g:160, b:220, a:.030 },
         ];
 
         function resize() {
             W = canvas.width  = window.innerWidth;
             H = canvas.height = window.innerHeight;
-            // Reset blob positions to proportional coords
-            blobs = BLOB_DEFS.map(d => ({ ...d, px: d.cx * W, py: d.cy * H, t: rand(0, Math.PI * 2) }));
+            blobs = BLOBS.map(d => ({ ...d, t: rand(0, Math.PI * 2) }));
         }
 
-        function draw(ts) {
+        function draw() {
             ctx.clearRect(0, 0, W, H);
             blobs.forEach(b => {
                 b.t += 0.004;
-                // Gentle sinusoidal drift
-                b.px = b.cx * W + Math.sin(b.t * 0.7  + 1.0) * W * 0.06;
-                b.py = b.cy * H + Math.cos(b.t * 0.55 + 0.5) * H * 0.05;
-
-                const gx = b.px, gy = b.py;
+                const px = b.cx * W + Math.sin(b.t * 0.7  + 1.0) * W * 0.06;
+                const py = b.cy * H + Math.cos(b.t * 0.55 + 0.5) * H * 0.05;
                 const rx = b.rx * W * 0.5;
                 const ry = b.ry * H * 0.5;
                 const pulse = 1 + 0.08 * Math.sin(b.t * 1.4);
-
-                // Ellipse via scale
                 ctx.save();
-                ctx.translate(gx, gy);
+                ctx.translate(px, py);
                 ctx.scale(1, ry / rx);
-                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * pulse);
-                grad.addColorStop(0,   `rgba(${b.r},${b.g},${b.b},${b.a * 1.6})`);
-                grad.addColorStop(0.5, `rgba(${b.r},${b.g},${b.b},${b.a * 0.7})`);
-                grad.addColorStop(1,   `rgba(${b.r},${b.g},${b.b},0)`);
-                ctx.beginPath();
-                ctx.arc(0, 0, rx * pulse, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
-                ctx.fill();
+                const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * pulse);
+                g.addColorStop(0,   `rgba(${b.r},${b.g},${b.b},${b.a * 1.6})`);
+                g.addColorStop(0.5, `rgba(${b.r},${b.g},${b.b},${b.a * 0.7})`);
+                g.addColorStop(1,   `rgba(${b.r},${b.g},${b.b},0)`);
+                ctx.beginPath(); ctx.arc(0, 0, rx * pulse, 0, Math.PI * 2);
+                ctx.fillStyle = g; ctx.fill();
                 ctx.restore();
             });
             raf = requestAnimationFrame(draw);
@@ -73,19 +186,16 @@
             if (document.hidden) cancelAnimationFrame(raf);
             else raf = requestAnimationFrame(draw);
         });
-        resize();
-        raf = requestAnimationFrame(draw);
+        resize(); raf = requestAnimationFrame(draw);
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 2. STAR FIELD + SHOOTING STARS
+    // 4. STAR FIELD + SHOOTING STARS
     // ═══════════════════════════════════════════════════════
     (function initStars() {
         const canvas = $('#star-canvas');
         const ctx    = canvas.getContext('2d');
         let W, H, stars = [], shots = [], raf;
-
-        // A few larger "special" stars with a cross twinkle
         const SPECIALS = 12;
 
         function resize() {
@@ -106,18 +216,15 @@
             const angle = rand(18, 42) * (Math.PI / 180);
             shots.push({
                 x: rand(W * .04, W * .72), y: rand(H * .01, H * .32),
-                vx: Math.cos(angle) * rand(9, 19),
-                vy: Math.sin(angle) * rand(9, 19),
+                vx: Math.cos(angle) * rand(9, 19), vy: Math.sin(angle) * rand(9, 19),
                 life: 1, len: rand(65, 170),
             });
         }
         window._shootStar = () => { shoot(); shoot(); shoot(); shoot(); };
 
         function drawCross(x, y, size, alpha) {
-            ctx.save();
-            ctx.globalAlpha = alpha * 0.55;
-            ctx.strokeStyle = `rgba(220,235,255,${alpha})`;
-            ctx.lineWidth = 0.6;
+            ctx.save(); ctx.globalAlpha = alpha * 0.55;
+            ctx.strokeStyle = `rgba(220,235,255,${alpha})`; ctx.lineWidth = 0.6;
             ctx.beginPath(); ctx.moveTo(x - size * 3, y); ctx.lineTo(x + size * 3, y); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(x, y - size * 3); ctx.lineTo(x, y + size * 3); ctx.stroke();
             ctx.restore();
@@ -125,28 +232,23 @@
 
         function draw(t) {
             ctx.clearRect(0, 0, W, H);
-
             stars.forEach(s => {
-                const tw    = .5 + .5 * Math.sin(t * s.speed * 1000 + s.phase);
+                const tw = .5 + .5 * Math.sin(t * s.speed * 1000 + s.phase);
                 const alpha = s.base * (.3 + .7 * tw);
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(220,235,255,${alpha})`;
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(220,235,255,${alpha})`; ctx.fill();
                 if (s.special && tw > 0.7) drawCross(s.x, s.y, s.r, alpha * 0.6);
             });
-
             for (let i = shots.length - 1; i >= 0; i--) {
                 const s  = shots[i];
                 const tx = s.x - s.vx * (s.len / 14);
                 const ty = s.y - s.vy * (s.len / 14);
                 const g  = ctx.createLinearGradient(s.x, s.y, tx, ty);
-                g.addColorStop(0,   `rgba(255,255,255,${s.life})`);
+                g.addColorStop(0, `rgba(255,255,255,${s.life})`);
                 g.addColorStop(.28, `rgba(232,201,106,${s.life * .52})`);
-                g.addColorStop(1,   'rgba(255,255,255,0)');
+                g.addColorStop(1, 'rgba(255,255,255,0)');
                 ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(tx, ty);
                 ctx.strokeStyle = g; ctx.lineWidth = 1.5; ctx.stroke();
-                // Head glow
                 ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255,255,255,${s.life * 0.9})`; ctx.fill();
                 s.x += s.vx; s.y += s.vy; s.life -= 0.021;
@@ -160,29 +262,25 @@
             if (document.hidden) cancelAnimationFrame(raf);
             else raf = requestAnimationFrame(draw);
         });
-        resize();
-        raf = requestAnimationFrame(draw);
+        resize(); raf = requestAnimationFrame(draw);
         setInterval(() => { if (!document.hidden && Math.random() < .42) shoot(); }, 3400);
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 3. ORBITING MOON
+    // 5. ORBITING MOON
     // ═══════════════════════════════════════════════════════
     (function initOrbitMoon() {
         const moon = $('#orbit-moon');
         if (!moon) return;
-
-        let angle = -Math.PI / 2;   // start at top
+        let angle = -Math.PI / 2;
         let W = window.innerWidth, H = window.innerHeight;
         window.addEventListener('resize', () => { W = window.innerWidth; H = window.innerHeight; }, { passive: true });
-
         (function loop() {
             if (!document.hidden) {
-                angle += 0.0052;   // ~21s per revolution
+                angle += 0.0052;
                 const rx = W * 0.43, ry = H * 0.38;
                 moon.style.left = (W * .5 + Math.cos(angle) * rx) + 'px';
                 moon.style.top  = (H * .5 + Math.sin(angle) * ry) + 'px';
-                // Scale slightly to simulate depth (closer at bottom)
                 const depth = .85 + .15 * ((Math.sin(angle) + 1) / 2);
                 moon.style.transform = `translate(-50%,-50%) scale(${depth})`;
             }
@@ -191,7 +289,7 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 4. DUST PARTICLES
+    // 6. DUST PARTICLES
     // ═══════════════════════════════════════════════════════
     (function initDust() {
         const container = $('#dust-container');
@@ -208,12 +306,9 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 5. MUSIC VISUALIZER  (Web Audio API)
-    //    Ring visualizer around the music button +
-    //    Horizon wave bar at the bottom
+    // 7. MUSIC VISUALIZER
     // ═══════════════════════════════════════════════════════
-    let audioCtx = null, analyser = null, dataArray = null;
-    let vizActive = false;
+    let audioCtx = null, analyser = null, dataArray = null, vizActive = false;
 
     function setupAudio(audioEl) {
         if (audioCtx) return;
@@ -227,148 +322,99 @@
             analyser.connect(audioCtx.destination);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             vizActive = true;
-            // Activate canvases
             $('#viz-canvas').classList.add('active');
             $('#music-ring-canvas').classList.add('active');
-        } catch (e) {
-            console.warn('Web Audio not available:', e);
-        }
+        } catch(e) { console.warn('Web Audio unavailable'); }
     }
 
-    // ── Ring visualizer (around music button) ───────────
+    // Ring visualizer
     (function initRingViz() {
         const ringCanvas = $('#music-ring-canvas');
         const ctx = ringCanvas.getContext('2d');
-        const SIZE = 110;
-        ringCanvas.width  = SIZE;
-        ringCanvas.height = SIZE;
+        const S = 110;
+        ringCanvas.width = ringCanvas.height = S;
 
-        function draw() {
+        (function draw() {
             requestAnimationFrame(draw);
-            ctx.clearRect(0, 0, SIZE, SIZE);
+            ctx.clearRect(0, 0, S, S);
             if (!vizActive || !analyser) return;
-
             analyser.getByteFrequencyData(dataArray);
-
-            const cx = SIZE / 2, cy = SIZE / 2;
-            const baseR = 34, barMax = 22;
-            const total = 48;   // bars around ring
-
+            const cx = S/2, cy = S/2, base = 34, barMax = 22, total = 48;
             for (let i = 0; i < total; i++) {
-                // Map bar index to a freq bucket
-                const bucketIdx = Math.floor((i / total) * (dataArray.length * 0.55));
-                const value = dataArray[bucketIdx] / 255;
-                const barH = value * barMax + 1.5;
-
+                const bucket = Math.floor((i / total) * dataArray.length * 0.55);
+                const val = dataArray[bucket] / 255;
+                const barH = val * barMax + 1.5;
                 const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-                const x1 = cx + Math.cos(angle) * baseR;
-                const y1 = cy + Math.sin(angle) * baseR;
-                const x2 = cx + Math.cos(angle) * (baseR + barH);
-                const y2 = cy + Math.sin(angle) * (baseR + barH);
-
-                // Gold → silver gradient per bar
-                const alpha = 0.35 + value * 0.65;
+                const x1 = cx + Math.cos(angle) * base,     y1 = cy + Math.sin(angle) * base;
+                const x2 = cx + Math.cos(angle) * (base+barH), y2 = cy + Math.sin(angle) * (base+barH);
+                const alpha = 0.35 + val * 0.65;
                 const g = ctx.createLinearGradient(x1, y1, x2, y2);
-                g.addColorStop(0,   `rgba(232,201,106,${alpha * 0.7})`);
-                g.addColorStop(1,   `rgba(196,216,245,${alpha})`);
-
-                ctx.beginPath();
-                ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-                ctx.strokeStyle = g;
-                ctx.lineWidth = 2.2;
-                ctx.lineCap = 'round';
-                ctx.stroke();
+                g.addColorStop(0, `rgba(232,201,106,${alpha * 0.7})`);
+                g.addColorStop(1, `rgba(196,216,245,${alpha})`);
+                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+                ctx.strokeStyle = g; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.stroke();
             }
-        }
-        draw();
+        })();
     })();
 
-    // ── Horizon wave visualizer (bottom of screen) ──────
+    // Horizon wave
     (function initHorizonViz() {
         const canvas = $('#viz-canvas');
         const ctx    = canvas.getContext('2d');
-        let W, H;
-
-        function resize() {
-            W = canvas.width  = window.innerWidth;
-            H = canvas.height = 90;
-        }
-        resize();
-        window.addEventListener('resize', resize, { passive: true });
-
-        // Smoothed bar heights for interpolation
+        let W = window.innerWidth;
+        canvas.width = W; canvas.height = 90;
+        window.addEventListener('resize', () => { W = window.innerWidth; canvas.width = W; }, { passive: true });
         let smooth = [];
 
-        function draw() {
+        (function draw() {
             requestAnimationFrame(draw);
-            ctx.clearRect(0, 0, W, H);
+            ctx.clearRect(0, 0, W, 90);
             if (!vizActive || !analyser) return;
-
             analyser.getByteFrequencyData(dataArray);
-
-            const bars = 80;
+            const bars = 80, usable = Math.floor(dataArray.length * 0.6);
             if (smooth.length !== bars) smooth = new Array(bars).fill(0);
-
-            const barW  = W / bars;
-            const usable = Math.floor(dataArray.length * 0.6);
-
+            const barW = W / bars;
             for (let i = 0; i < bars; i++) {
-                const bucketIdx = Math.floor((i / bars) * usable);
-                const raw   = dataArray[bucketIdx] / 255;
-                smooth[i]   = lerp(smooth[i], raw, 0.14);  // smooth follow
-                const barH  = smooth[i] * (H * 0.85) + 1;
-                const x     = i * barW;
-                const y     = H - barH;
-
-                // Gradient bar: gold base → silver tip
-                const g = ctx.createLinearGradient(x, H, x, y);
-                g.addColorStop(0,   `rgba(232,201,106,${0.18 + smooth[i] * 0.38})`);
+                const bucket = Math.floor((i / bars) * usable);
+                const raw = dataArray[bucket] / 255;
+                smooth[i] = lerp(smooth[i], raw, 0.14);
+                const barH = smooth[i] * 76 + 1;
+                const x = i * barW, y = 90 - barH;
+                const g = ctx.createLinearGradient(x, 90, x, y);
+                g.addColorStop(0, `rgba(232,201,106,${0.18 + smooth[i] * 0.38})`);
                 g.addColorStop(0.6, `rgba(196,216,245,${0.14 + smooth[i] * 0.4})`);
-                g.addColorStop(1,   `rgba(196,216,245,${0.06 + smooth[i] * 0.28})`);
-
+                g.addColorStop(1, `rgba(196,216,245,${0.06 + smooth[i] * 0.28})`);
                 ctx.fillStyle = g;
                 ctx.beginPath();
-                ctx.roundRect(x + 1, y, barW - 2, barH, [2, 2, 0, 0]);
+                if (ctx.roundRect) ctx.roundRect(x + 1, y, barW - 2, barH, [2, 2, 0, 0]);
+                else ctx.rect(x + 1, y, barW - 2, barH);
                 ctx.fill();
             }
-
-            // Soft gradient overlay at top of the viz to blend into page
-            const fade = ctx.createLinearGradient(0, 0, 0, H * 0.55);
-            fade.addColorStop(0,   'rgba(3,8,16,0)');
-            fade.addColorStop(1,   'rgba(3,8,16,0)');
-            ctx.fillStyle = fade;
-            ctx.fillRect(0, 0, W, H);
-        }
-        draw();
+        })();
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 6. CUSTOM CURSOR (lerp follow)
+    // 8. CURSOR
     // ═══════════════════════════════════════════════════════
     (function initCursor() {
         const cursor = $('.custom-cursor');
         if (!cursor) return;
         let mx = -200, my = -200, cx = -200, cy = -200;
-
         document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
-
         (function loop() {
             cx += (mx - cx) * 0.11;
             cy += (my - cy) * 0.11;
-            cursor.style.left = cx + 'px';
-            cursor.style.top  = cy + 'px';
+            cursor.style.left = cx + 'px'; cursor.style.top = cy + 'px';
             requestAnimationFrame(loop);
         })();
-
-        const hoverTargets = $$('button, .gallery-item, #close-lightbox, .phase');
-        hoverTargets.forEach(el => {
+        $$('button, .gallery-item, #close-lightbox, .phase, .list-item').forEach(el => {
             el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
             el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
         });
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 7. SCROLL PROGRESS
+    // 9. SCROLL PROGRESS
     // ═══════════════════════════════════════════════════════
     (function initScrollProgress() {
         const bar = $('#scroll-progress');
@@ -380,7 +426,7 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 8. WELCOME SCREEN + AUDIO
+    // 10. WELCOME + AUDIO
     // ═══════════════════════════════════════════════════════
     (function initWelcome() {
         const screen    = $('#welcome-screen');
@@ -429,14 +475,12 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 9. CARD REVEAL (IntersectionObserver)
+    // 11. CARD REVEAL
     // ═══════════════════════════════════════════════════════
     (function initReveal() {
-        // Stagger the love list items once their card is visible
-        function revealListItems(card) {
-            const items = $$('.list-item', card);
-            items.forEach((item, i) => {
-                setTimeout(() => item.classList.add('visible'), i * 130 + 200);
+        function revealList(card) {
+            $$('.list-item', card).forEach((item, i) => {
+                setTimeout(() => item.classList.add('visible'), i * 120 + 180);
             });
         }
 
@@ -445,18 +489,18 @@
                 if (!entry.isIntersecting) return;
                 setTimeout(() => {
                     entry.target.classList.add('visible');
-                    if (entry.target.id === 'love-card')   revealListItems(entry.target);
+                    if (entry.target.id === 'love-card')   revealList(entry.target);
                     if (entry.target.id === 'letter-card') setTimeout(startTypewriter, 700);
                 }, 60);
                 obs.unobserve(entry.target);
             });
-        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
         $$('.tilt-card').forEach(c => obs.observe(c));
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 10. 3D TILT
+    // 12. 3D TILT
     // ═══════════════════════════════════════════════════════
     (function initTilt() {
         if (window.matchMedia('(max-width: 768px)').matches) return;
@@ -479,7 +523,7 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 11. SVG TREE GROWTH
+    // 13. SVG TREE GROWTH
     // ═══════════════════════════════════════════════════════
     (function initBloom() {
         const treeSvg   = $('#tree-svg');
@@ -489,17 +533,17 @@
         const complText = $('#compliment-text');
         const btn       = $('#compliment-btn');
         const secret    = $('#secret-message');
-        const MAX       = 10;
-        let count       = 0;
+        let count = 0;
+        const MAX = 10;
 
         const compliments = [
-            "You've always been more than enough, you know.",
-            "There's no version of my day that isn't better with you in it.",
-            "The way you love things is one of my favourite things about you.",
-            "I don't know how you do it, but you always say exactly the right thing.",
-            "Genuinely — you are the funniest person I've ever met.",
-            "You make even the quiet moments feel like something worth keeping.",
-            "I'm just really, really glad I get to know you.",
+            "You've always been more than enough — I hope you know that.",
+            "There's no version of my day that doesn't get better when you're in it.",
+            "The way you care about things is one of my favourite things about you.",
+            "You have no idea how good it is talking to you. Like genuinely.",
+            "You are, without question, the funniest person I know.",
+            "Even the boring moments feel good with you in them.",
+            "I'm really glad I get to know you. Like actually really glad.",
         ];
 
         function updateTree(n) {
@@ -509,25 +553,19 @@
         }
 
         btn.addEventListener('click', () => {
-            // Swap compliment with fade
             complText.style.opacity = '0';
             setTimeout(() => {
                 complText.textContent  = compliments[randInt(0, compliments.length - 1)];
                 complText.style.opacity = '1';
-            }, 350);
-
+            }, 340);
             if (count >= MAX) return;
             count++;
-
             fill.style.width = (count / MAX * 100) + '%';
             fill.classList.add('active');
-
             levelText.textContent = count < MAX
                 ? `Moonlight Level  ${count} / ${MAX}`
                 : 'The Moon Tree is in Full Bloom ✦ 🌕';
-
             updateTree(count);
-
             if (count === MAX) {
                 treeSvg.classList.add('full-bloom');
                 secret.classList.add('revealed');
@@ -538,7 +576,7 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 12. LIGHTBOX
+    // 14. LIGHTBOX
     // ═══════════════════════════════════════════════════════
     (function initLightbox() {
         const box      = $('#lightbox');
@@ -547,8 +585,7 @@
         const closeBtn = $('#close-lightbox');
 
         function open(src) {
-            img.src = src;
-            box.classList.add('open');
+            img.src = src; box.classList.add('open');
             box.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
         }
@@ -566,7 +603,7 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 13. TYPEWRITER
+    // 15. TYPEWRITER
     // ═══════════════════════════════════════════════════════
     let typingDone = false;
 
@@ -576,8 +613,8 @@
 
         const lines = [
             { id: 'line-1',   text: 'Dear Moon,' },
-            { id: 'line-2',   text: "I made this because you deserve to know — really know — how much you mean to me. Not in a passing way. In the kind of way I think about when I'm trying to explain to myself why everything feels lighter when I'm talking to you." },
-            { id: 'line-3',   text: "You're the kind of person that makes being alive feel like a good deal. I'm really lucky I get to say that." },
+            { id: 'line-2',   text: "I made this for you because I wanted you to have something real — not a text, not a voice note. Something you can come back to. Something that just says: I see you, and I think you're incredible." },
+            { id: 'line-3',   text: "You make things feel lighter just by being around. That's not nothing. That's actually everything." },
             { id: 'line-sig', text: '— Yours ❤️' },
         ];
 
@@ -593,34 +630,32 @@
             } else {
                 el.classList.remove('typing-cursor');
                 li++; ci = 0;
-                setTimeout(tick, li < lines.length ? 520 : 0);
+                setTimeout(tick, li < lines.length ? 500 : 0);
             }
         }
         tick();
     }
 
     // ═══════════════════════════════════════════════════════
-    // 14. CLICK SPARKS
+    // 16. CLICK SPARKS
     // ═══════════════════════════════════════════════════════
     (function initSparks() {
-        const symbols = ['✦', '✶', '·', '⋆', '˚', '🌙', '°'];
+        const symbols = ['✦', '✶', '·', '⋆', '˚', '🌙', '°', '*'];
         const colors  = ['#e8c96a', '#c4d8f5', '#a0b8e8', '#f0dfa0', '#b0cce8'];
 
         document.addEventListener('click', e => {
             if (e.target.closest('button') || e.target.closest('.gallery-item')) return;
             for (let i = 0; i < 8; i++) {
-                const el    = document.createElement('div');
+                const el = document.createElement('div');
                 el.className = 'click-spark';
                 el.textContent = symbols[randInt(0, symbols.length - 1)];
                 el.style.color    = colors[randInt(0, colors.length - 1)];
                 el.style.fontSize = rand(0.6, 1.15) + 'rem';
-                const angle = rand(0, Math.PI * 2);
-                const vel   = rand(26, 68);
+                const angle = rand(0, Math.PI * 2), vel = rand(26, 68);
                 el.style.setProperty('--tx', Math.cos(angle) * vel + 'px');
                 el.style.setProperty('--ty', Math.sin(angle) * vel - 22 + 'px');
                 el.style.setProperty('--rot', rand(-65, 65) + 'deg');
-                el.style.left = e.clientX + 'px';
-                el.style.top  = e.clientY + 'px';
+                el.style.left = e.clientX + 'px'; el.style.top = e.clientY + 'px';
                 document.body.appendChild(el);
                 setTimeout(() => el.remove(), 950);
             }
