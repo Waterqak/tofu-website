@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════
-   MOON — script.js  (optimized)
+   MOON — script.js  (complete)
    ═══════════════════════════════════════ */
 
 (function () {
@@ -56,10 +56,8 @@
             const diff = tgt - now;
 
             if (diff <= 0) {
-                dEl.textContent = '00';
-                hEl.textContent = '00';
-                mEl.textContent = '00';
-                sEl.textContent = '00';
+                dEl.textContent = '00'; hEl.textContent = '00';
+                mEl.textContent = '00'; sEl.textContent = '00';
                 msgEl.textContent = birthdayLines[bdayMsgIdx % birthdayLines.length];
                 if (diff > -86400000) {
                     spawnConfettiBurst();
@@ -74,24 +72,15 @@
             const m = Math.floor((totalSecs % 3600) / 60);
             const s = totalSecs % 60;
 
-            bump(dEl, d, 'd');
-            bump(hEl, h, 'h');
-            bump(mEl, m, 'm');
-            bump(sEl, s, 's');
+            bump(dEl, d, 'd'); bump(hEl, h, 'h');
+            bump(mEl, m, 'm'); bump(sEl, s, 's');
 
-            if (d === 0 && h === 0) {
-                msgEl.textContent = "Any minute now. 🌙";
-            } else if (d === 0) {
-                msgEl.textContent = "It's today! Just a few hours left. 🎂";
-            } else if (d === 1) {
-                msgEl.textContent = "Tomorrow. I'm already excited for you.";
-            } else if (d <= 7) {
-                msgEl.textContent = `Only ${d} more days. I can't wait.`;
-            } else if (d <= 30) {
-                msgEl.textContent = `${d} days to go. It's coming up fast.`;
-            } else {
-                msgEl.textContent = "Counting down every single day. 🌕";
-            }
+            if (d === 0 && h === 0)  msgEl.textContent = "Any minute now. 🌙";
+            else if (d === 0)        msgEl.textContent = "It's today! Just a few hours left. 🎂";
+            else if (d === 1)        msgEl.textContent = "Tomorrow. I'm already excited for you.";
+            else if (d <= 7)         msgEl.textContent = `Only ${d} more days. I can't wait.`;
+            else if (d <= 30)        msgEl.textContent = `${d} days to go. It's coming up fast.`;
+            else                     msgEl.textContent = "Counting down every single day. 🌕";
         }
 
         tick();
@@ -104,26 +93,13 @@
     function spawnConfettiBurst(count = 60) {
         const container = $('#confetti-container');
         if (!container) return;
-        const colors = ['#e8c96a', '#c4d8f5', '#f5a0c0', '#a0e0d0', '#ffffff', '#ffd700'];
+        const cols = ['#e8c96a','#c4d8f5','#f5a0c0','#a0e0d0','#ffffff','#ffd700'];
         const frag = document.createDocumentFragment();
         for (let i = 0; i < count; i++) {
-            const c   = document.createElement('div');
+            const c = document.createElement('div');
             c.className = 'confetti-piece';
-            const size = rand(5, 11);
-            const dur  = rand(2, 4.5);
-            const spin = rand(-720, 720);
-            c.style.cssText = `
-                left:${rand(10,90)}%;
-                top:-${size * 2}px;
-                width:${size}px;
-                height:${size * rand(0.4, 1.2)}px;
-                background:${colors[randInt(0, colors.length-1)]};
-                border-radius:${rand(0,4)}px;
-                animation-duration:${dur}s;
-                animation-delay:${rand(0, 1.5)}s;
-                --spin:${spin}deg;
-                transform:rotate(${rand(0,360)}deg);
-            `;
+            const size = rand(5,11), dur = rand(2,4.5), spin = rand(-720,720);
+            c.style.cssText = `left:${rand(10,90)}%;top:-${size*2}px;width:${size}px;height:${size*rand(0.4,1.2)}px;background:${cols[randInt(0,cols.length-1)]};border-radius:${rand(0,4)}px;animation-duration:${dur}s;animation-delay:${rand(0,1.5)}s;--spin:${spin}deg;transform:rotate(${rand(0,360)}deg);`;
             frag.appendChild(c);
             setTimeout(() => c.remove(), (dur + 2) * 1000);
         }
@@ -154,24 +130,22 @@
         }
 
         function draw() {
-            // Fill with base color instead of clearRect (alpha:false canvas)
             ctx.fillStyle = '#030810';
             ctx.fillRect(0, 0, W, H);
             blobs.forEach(b => {
                 b.t += 0.004;
-                const px = b.cx * W + Math.sin(b.t * 0.7  + 1.0) * W * 0.06;
+                const px = b.cx * W + Math.sin(b.t * 0.7 + 1.0) * W * 0.06;
                 const py = b.cy * H + Math.cos(b.t * 0.55 + 0.5) * H * 0.05;
-                const rx = b.rx * W * 0.5;
-                const ry = b.ry * H * 0.5;
+                const rx = b.rx * W * 0.5, ry = b.ry * H * 0.5;
                 const pulse = 1 + 0.08 * Math.sin(b.t * 1.4);
                 ctx.save();
                 ctx.translate(px, py);
                 ctx.scale(1, ry / rx);
-                const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * pulse);
-                g.addColorStop(0,   `rgba(${b.r},${b.g},${b.b},${b.a * 1.6})`);
-                g.addColorStop(0.5, `rgba(${b.r},${b.g},${b.b},${b.a * 0.7})`);
+                const g = ctx.createRadialGradient(0,0,0,0,0,rx*pulse);
+                g.addColorStop(0,   `rgba(${b.r},${b.g},${b.b},${b.a*1.6})`);
+                g.addColorStop(0.5, `rgba(${b.r},${b.g},${b.b},${b.a*0.7})`);
                 g.addColorStop(1,   `rgba(${b.r},${b.g},${b.b},0)`);
-                ctx.beginPath(); ctx.arc(0, 0, rx * pulse, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(0,0,rx*pulse,0,Math.PI*2);
                 ctx.fillStyle = g; ctx.fill();
                 ctx.restore();
             });
@@ -181,7 +155,7 @@
         window.addEventListener('resize', resize, { passive: true });
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) cancelAnimationFrame(raf);
-            else { raf = requestAnimationFrame(draw); }
+            else raf = requestAnimationFrame(draw);
         });
         resize(); raf = requestAnimationFrame(draw);
     })();
@@ -199,22 +173,20 @@
             W = canvas.width  = window.innerWidth;
             H = canvas.height = window.innerHeight;
             stars = Array.from({ length: 280 }, (_, i) => ({
-                x: rand(0, W), y: rand(0, H),
-                r:       i < SPECIALS ? rand(1.2, 2.2) : rand(0.18, 1.1),
-                base:    rand(0.1, 0.72),
-                speed:   rand(0.0007, 0.0038),
-                phase:   rand(0, Math.PI * 2),
-                special: i < SPECIALS,
+                x: rand(0,W), y: rand(0,H),
+                r: i < SPECIALS ? rand(1.2,2.2) : rand(0.18,1.1),
+                base: rand(0.1,0.72), speed: rand(0.0007,0.0038),
+                phase: rand(0,Math.PI*2), special: i < SPECIALS,
             }));
         }
 
         function shoot() {
             if (document.hidden) return;
-            const angle = rand(18, 42) * (Math.PI / 180);
+            const angle = rand(18,42) * (Math.PI/180);
             shots.push({
-                x: rand(W * .04, W * .72), y: rand(H * .01, H * .32),
-                vx: Math.cos(angle) * rand(9, 19), vy: Math.sin(angle) * rand(9, 19),
-                life: 1, len: rand(65, 170),
+                x: rand(W*.04,W*.72), y: rand(H*.01,H*.32),
+                vx: Math.cos(angle)*rand(9,19), vy: Math.sin(angle)*rand(9,19),
+                life: 1, len: rand(65,170),
             });
         }
         window._shootStar = () => { shoot(); shoot(); shoot(); shoot(); };
@@ -222,34 +194,33 @@
         function drawCross(x, y, size, alpha) {
             ctx.save(); ctx.globalAlpha = alpha * 0.55;
             ctx.strokeStyle = `rgba(220,235,255,${alpha})`; ctx.lineWidth = 0.6;
-            ctx.beginPath(); ctx.moveTo(x - size * 3, y); ctx.lineTo(x + size * 3, y); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(x, y - size * 3); ctx.lineTo(x, y + size * 3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x-size*3,y); ctx.lineTo(x+size*3,y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x,y-size*3); ctx.lineTo(x,y+size*3); ctx.stroke();
             ctx.restore();
         }
 
         function draw(t) {
-            ctx.clearRect(0, 0, W, H);
+            ctx.clearRect(0,0,W,H);
             stars.forEach(s => {
-                const tw = .5 + .5 * Math.sin(t * s.speed * 1000 + s.phase);
-                const alpha = s.base * (.3 + .7 * tw);
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                const tw = .5+.5*Math.sin(t*s.speed*1000+s.phase);
+                const alpha = s.base*(.3+.7*tw);
+                ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
                 ctx.fillStyle = `rgba(220,235,255,${alpha})`; ctx.fill();
-                if (s.special && tw > 0.7) drawCross(s.x, s.y, s.r, alpha * 0.6);
+                if (s.special && tw > 0.7) drawCross(s.x,s.y,s.r,alpha*0.6);
             });
-            for (let i = shots.length - 1; i >= 0; i--) {
-                const s  = shots[i];
-                const tx = s.x - s.vx * (s.len / 14);
-                const ty = s.y - s.vy * (s.len / 14);
-                const g  = ctx.createLinearGradient(s.x, s.y, tx, ty);
+            for (let i = shots.length-1; i >= 0; i--) {
+                const s = shots[i];
+                const tx = s.x - s.vx*(s.len/14), ty = s.y - s.vy*(s.len/14);
+                const g = ctx.createLinearGradient(s.x,s.y,tx,ty);
                 g.addColorStop(0, `rgba(255,255,255,${s.life})`);
-                g.addColorStop(.28, `rgba(232,201,106,${s.life * .52})`);
+                g.addColorStop(.28, `rgba(232,201,106,${s.life*.52})`);
                 g.addColorStop(1, 'rgba(255,255,255,0)');
-                ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(tx, ty);
+                ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(tx,ty);
                 ctx.strokeStyle = g; ctx.lineWidth = 1.5; ctx.stroke();
-                ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255,255,255,${s.life * 0.9})`; ctx.fill();
+                ctx.beginPath(); ctx.arc(s.x,s.y,2,0,Math.PI*2);
+                ctx.fillStyle = `rgba(255,255,255,${s.life*0.9})`; ctx.fill();
                 s.x += s.vx; s.y += s.vy; s.life -= 0.021;
-                if (s.life <= 0) shots.splice(i, 1);
+                if (s.life <= 0) shots.splice(i,1);
             }
             raf = requestAnimationFrame(draw);
         }
@@ -257,14 +228,14 @@
         window.addEventListener('resize', resize, { passive: true });
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) cancelAnimationFrame(raf);
-            else { raf = requestAnimationFrame(draw); }
+            else raf = requestAnimationFrame(draw);
         });
         resize(); raf = requestAnimationFrame(draw);
         setInterval(() => { if (!document.hidden && Math.random() < .42) shoot(); }, 3400);
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 5. ORBITING MOON
+    // 5. ORBITING MOON — transform-only, no reflow
     // ═══════════════════════════════════════════════════════
     (function initOrbitMoon() {
         const moon = $('#orbit-moon');
@@ -279,7 +250,6 @@
                 const x = W * .5 + Math.cos(angle) * rx;
                 const y = H * .5 + Math.sin(angle) * ry;
                 const depth = .85 + .15 * ((Math.sin(angle) + 1) / 2);
-                // Use transform for GPU-composited movement — avoids left/top reflow
                 moon.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${depth})`;
             }
             requestAnimationFrame(loop);
@@ -295,7 +265,7 @@
             if (document.hidden) return;
             const d = document.createElement('div');
             d.className = 'dust';
-            const size = rand(1.5, 4.5), dur = rand(15, 24);
+            const size = rand(1.5,4.5), dur = rand(15,24);
             d.style.cssText = `left:${rand(0,100)}%;top:-${size}px;width:${size}px;height:${size}px;animation-duration:${dur}s;`;
             container.appendChild(d);
             setTimeout(() => d.remove(), dur * 1000);
@@ -325,37 +295,34 @@
         } catch(e) { console.warn('Web Audio unavailable'); }
     }
 
-    // Ring visualizer
     (function initRingViz() {
         const ringCanvas = $('#music-ring-canvas');
         const ctx = ringCanvas.getContext('2d');
         const S = 110;
         ringCanvas.width = ringCanvas.height = S;
-
         (function draw() {
             requestAnimationFrame(draw);
-            ctx.clearRect(0, 0, S, S);
+            ctx.clearRect(0,0,S,S);
             if (!vizActive || !analyser) return;
             analyser.getByteFrequencyData(dataArray);
             const cx = S/2, cy = S/2, base = 34, barMax = 22, total = 48;
             for (let i = 0; i < total; i++) {
-                const bucket = Math.floor((i / total) * dataArray.length * 0.55);
-                const val = dataArray[bucket] / 255;
-                const barH = val * barMax + 1.5;
-                const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-                const x1 = cx + Math.cos(angle) * base,     y1 = cy + Math.sin(angle) * base;
-                const x2 = cx + Math.cos(angle) * (base+barH), y2 = cy + Math.sin(angle) * (base+barH);
-                const alpha = 0.35 + val * 0.65;
-                const g = ctx.createLinearGradient(x1, y1, x2, y2);
-                g.addColorStop(0, `rgba(232,201,106,${alpha * 0.7})`);
+                const bucket = Math.floor((i/total)*dataArray.length*0.55);
+                const val = dataArray[bucket]/255;
+                const barH = val*barMax+1.5;
+                const angle = (i/total)*Math.PI*2-Math.PI/2;
+                const x1 = cx+Math.cos(angle)*base, y1 = cy+Math.sin(angle)*base;
+                const x2 = cx+Math.cos(angle)*(base+barH), y2 = cy+Math.sin(angle)*(base+barH);
+                const alpha = 0.35+val*0.65;
+                const g = ctx.createLinearGradient(x1,y1,x2,y2);
+                g.addColorStop(0, `rgba(232,201,106,${alpha*0.7})`);
                 g.addColorStop(1, `rgba(196,216,245,${alpha})`);
-                ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+                ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
                 ctx.strokeStyle = g; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.stroke();
             }
         })();
     })();
 
-    // Horizon wave
     (function initHorizonViz() {
         const canvas = $('#viz-canvas');
         const ctx    = canvas.getContext('2d');
@@ -363,76 +330,55 @@
         canvas.width = W; canvas.height = 90;
         window.addEventListener('resize', () => { W = window.innerWidth; canvas.width = W; }, { passive: true });
         let smooth = [];
-
         (function draw() {
             requestAnimationFrame(draw);
-            ctx.clearRect(0, 0, W, 90);
+            ctx.clearRect(0,0,W,90);
             if (!vizActive || !analyser) return;
             analyser.getByteFrequencyData(dataArray);
-            const bars = 80, usable = Math.floor(dataArray.length * 0.6);
+            const bars = 80, usable = Math.floor(dataArray.length*0.6);
             if (smooth.length !== bars) smooth = new Array(bars).fill(0);
-            const barW = W / bars;
+            const barW = W/bars;
             for (let i = 0; i < bars; i++) {
-                const bucket = Math.floor((i / bars) * usable);
-                const raw = dataArray[bucket] / 255;
+                const bucket = Math.floor((i/bars)*usable);
+                const raw = dataArray[bucket]/255;
                 smooth[i] = lerp(smooth[i], raw, 0.14);
-                const barH = smooth[i] * 76 + 1;
-                const x = i * barW, y = 90 - barH;
-                const g = ctx.createLinearGradient(x, 90, x, y);
-                g.addColorStop(0, `rgba(232,201,106,${0.18 + smooth[i] * 0.38})`);
-                g.addColorStop(0.6, `rgba(196,216,245,${0.14 + smooth[i] * 0.4})`);
-                g.addColorStop(1, `rgba(196,216,245,${0.06 + smooth[i] * 0.28})`);
+                const barH = smooth[i]*76+1, x = i*barW, y = 90-barH;
+                const g = ctx.createLinearGradient(x,90,x,y);
+                g.addColorStop(0, `rgba(232,201,106,${0.18+smooth[i]*0.38})`);
+                g.addColorStop(0.6, `rgba(196,216,245,${0.14+smooth[i]*0.4})`);
+                g.addColorStop(1, `rgba(196,216,245,${0.06+smooth[i]*0.28})`);
                 ctx.fillStyle = g;
                 ctx.beginPath();
-                if (ctx.roundRect) ctx.roundRect(x + 1, y, barW - 2, barH, [2, 2, 0, 0]);
-                else ctx.rect(x + 1, y, barW - 2, barH);
+                if (ctx.roundRect) ctx.roundRect(x+1,y,barW-2,barH,[2,2,0,0]);
+                else ctx.rect(x+1,y,barW-2,barH);
                 ctx.fill();
             }
         })();
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 8. CURSOR — fully rewritten for smoothness & no jitter
+    // 8. CURSOR — transform-only, smooth lerp
     // ═══════════════════════════════════════════════════════
     (function initCursor() {
         const cursor = $('.custom-cursor');
         if (!cursor) return;
 
-        let mx = -200, my = -200;
-        let cx = -200, cy = -200;
-        let hovering = false;
+        let mx = -200, my = -200, cx = -200, cy = -200, hovering = false;
 
-        // Track raw mouse — no rAF here, just store coords
-        document.addEventListener('mousemove', e => {
-            mx = e.clientX;
-            my = e.clientY;
-        }, { passive: true });
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
 
-        // Single rAF loop — lerp toward target each frame
         (function loop() {
-            // Faster lerp factor = feels more responsive, less laggy
             cx = lerp(cx, mx, 0.18);
             cy = lerp(cy, my, 0.18);
-
-            // Use transform only — no left/top (avoids layout thrashing)
             cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
-
             requestAnimationFrame(loop);
         })();
 
-        // Hover state
         function addHover(el) {
-            el.addEventListener('mouseenter', () => {
-                if (!hovering) { cursor.classList.add('hovering'); hovering = true; }
-            });
-            el.addEventListener('mouseleave', () => {
-                cursor.classList.remove('hovering'); hovering = false;
-            });
+            el.addEventListener('mouseenter', () => { if (!hovering) { cursor.classList.add('hovering'); hovering = true; } });
+            el.addEventListener('mouseleave', () => { cursor.classList.remove('hovering'); hovering = false; });
         }
-
         $$('button, .gallery-item, #close-lightbox, .phase, .list-item').forEach(addHover);
-
-        // Hide cursor when it leaves window
         document.addEventListener('mouseleave', () => { cursor.style.opacity = '0'; });
         document.addEventListener('mouseenter', () => { cursor.style.opacity = '1'; });
     })();
@@ -462,7 +408,7 @@
         let playing = false;
 
         function fade(audio, to, ms) {
-            const steps = 28, stepMs = ms / steps, delta = (to - audio.volume) / steps;
+            const steps = 28, stepMs = ms/steps, delta = (to - audio.volume)/steps;
             let n = 0;
             const iv = setInterval(() => {
                 audio.volume = clamp(audio.volume + delta, 0, 1);
@@ -475,8 +421,7 @@
             setupAudio(music);
             music.volume = 0;
             music.play().then(() => {
-                fade(music, 0.52, 2800);
-                playing = true;
+                fade(music, 0.52, 2800); playing = true;
                 musicIcon.textContent = '⏸️';
                 if (musicLbl) musicLbl.textContent = 'Pause';
             }).catch(() => {});
@@ -536,7 +481,7 @@
                     const r  = card.getBoundingClientRect();
                     const nx = (e.clientX - r.left  - r.width  / 2) / (r.width  / 2);
                     const ny = (e.clientY - r.top   - r.height / 2) / (r.height / 2);
-                    card.style.transform = `perspective(1400px) rotateX(${ny * -4}deg) rotateY(${nx * 4}deg) translateY(-5px)`;
+                    card.style.transform = `perspective(1400px) rotateX(${ny*-4}deg) rotateY(${nx*4}deg) translateY(-5px)`;
                 });
             }, { passive: true });
             card.addEventListener('mouseleave', () => {
@@ -557,6 +502,7 @@
         const complText = $('#compliment-text');
         const btn       = $('#compliment-btn');
         const secret    = $('#secret-message');
+        if (!btn) return;
         let count = 0;
         const MAX = 10;
 
@@ -600,73 +546,84 @@
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 14. LIGHTBOX — fixed image zoom + keyboard + scroll lock
+    // 14. LIGHTBOX — fully fixed image open
     // ═══════════════════════════════════════════════════════
     (function initLightbox() {
         const box      = $('#lightbox');
         const imgEl    = $('#lightbox-img');
+        const caption  = $('#lightbox-caption');
         const backdrop = $('#lightbox-backdrop');
         const closeBtn = $('#close-lightbox');
 
-        // Preload image before showing so it doesn't flash/resize
-        function open(src) {
-            // Load image first, then show
+        function open(src, cap) {
+            // Reset state
             imgEl.style.opacity = '0';
-            imgEl.src = src;
+            imgEl.src = '';
+            if (caption) caption.textContent = cap || '';
 
-            const preload = new Image();
-            preload.onload = () => {
+            // Preload, then reveal
+            const pre = new Image();
+            pre.onload = () => {
+                imgEl.src = src;
                 box.classList.add('open');
                 box.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
-                // Small delay so the open transition fires cleanly
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        imgEl.style.opacity = '1';
-                    });
-                });
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    imgEl.style.opacity = '1';
+                }));
             };
-            preload.onerror = () => {
-                // Even if error, still open box
+            pre.onerror = () => {
+                imgEl.src = src;
                 box.classList.add('open');
                 box.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
                 imgEl.style.opacity = '1';
             };
-            preload.src = src;
+            pre.src = src;
         }
 
         function close() {
             box.classList.remove('open');
             box.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
-            setTimeout(() => {
-                imgEl.src = '';
-                imgEl.style.opacity = '0';
-            }, 600);
+            setTimeout(() => { imgEl.src = ''; imgEl.style.opacity = '0'; }, 500);
         }
 
-        // Delegate to all .enlargeable images (including dynamically added ones)
+        // ── GALLERY: click on the figure (not just the img)
+        // Works because pointer-events: none is on the img itself
         document.addEventListener('click', e => {
-            const target = e.target.closest('.enlargeable');
-            if (target) {
+            // Check if click is on or inside a gallery item
+            const item = e.target.closest('.gallery-item');
+            if (item) {
+                e.preventDefault();
                 e.stopPropagation();
-                // Use data-src if available, fallback to src
-                const src = target.dataset.src || target.src || target.getAttribute('href');
-                if (src) open(src);
+                const img = item.querySelector('img');
+                if (!img) return;
+                const src = img.dataset.src || img.src;
+                const cap = item.dataset.caption || img.alt || '';
+                if (src) open(src, cap);
+                return;
+            }
+
+            // Also support standalone .enlargeable elements
+            const enlargeable = e.target.closest('.enlargeable');
+            if (enlargeable && !enlargeable.closest('.gallery-item')) {
+                e.stopPropagation();
+                const src = enlargeable.dataset.src || enlargeable.src;
+                if (src) open(src, enlargeable.alt || '');
             }
         });
 
         backdrop.addEventListener('click', close);
         closeBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape' && box.classList.contains('open')) close(); });
-
-        // Prevent scroll/zoom inside lightbox leaking
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && box.classList.contains('open')) close();
+        });
         box.addEventListener('wheel', e => e.stopPropagation(), { passive: false });
     })();
 
     // ═══════════════════════════════════════════════════════
-    // 15. TYPEWRITER
+    // 15. TYPEWRITER — Water signs the letter
     // ═══════════════════════════════════════════════════════
     let typingDone = false;
 
@@ -678,7 +635,7 @@
             { id: 'line-1',   text: 'Dear Moon,' },
             { id: 'line-2',   text: "I made this for you because I wanted you to have something real — not a text, not a voice note. Something you can come back to. Something that just says: I see you, and I think you're incredible." },
             { id: 'line-3',   text: "You make things feel lighter just by being around. That's not nothing. That's actually everything." },
-            { id: 'line-sig', text: '— Yours ❤️' },
+            { id: 'line-sig', text: '— Water ❤️' },
         ];
 
         let li = 0, ci = 0;
@@ -703,8 +660,8 @@
     // 16. CLICK SPARKS
     // ═══════════════════════════════════════════════════════
     (function initSparks() {
-        const symbols = ['✦', '✶', '·', '⋆', '˚', '🌙', '°', '*'];
-        const colors  = ['#e8c96a', '#c4d8f5', '#a0b8e8', '#f0dfa0', '#b0cce8'];
+        const symbols = ['✦','✶','·','⋆','˚','🌙','°','*'];
+        const cols    = ['#e8c96a','#c4d8f5','#a0b8e8','#f0dfa0','#b0cce8'];
 
         document.addEventListener('click', e => {
             if (e.target.closest('button') || e.target.closest('.gallery-item')) return;
@@ -712,14 +669,13 @@
             for (let i = 0; i < 8; i++) {
                 const el = document.createElement('div');
                 el.className = 'click-spark';
-                el.textContent = symbols[randInt(0, symbols.length - 1)];
-                el.style.color    = colors[randInt(0, colors.length - 1)];
+                el.textContent = symbols[randInt(0, symbols.length-1)];
+                el.style.color    = cols[randInt(0, cols.length-1)];
                 el.style.fontSize = rand(0.6, 1.15) + 'rem';
-                const angle = rand(0, Math.PI * 2), vel = rand(26, 68);
-                el.style.setProperty('--tx', Math.cos(angle) * vel + 'px');
-                el.style.setProperty('--ty', Math.sin(angle) * vel - 22 + 'px');
-                el.style.setProperty('--rot', rand(-65, 65) + 'deg');
-                // Use fixed position based on click coords — no left/top reflow
+                const angle = rand(0, Math.PI*2), vel = rand(26, 68);
+                el.style.setProperty('--tx', Math.cos(angle)*vel + 'px');
+                el.style.setProperty('--ty', Math.sin(angle)*vel - 22 + 'px');
+                el.style.setProperty('--rot', rand(-65,65) + 'deg');
                 el.style.left = e.clientX + 'px';
                 el.style.top  = e.clientY + 'px';
                 frag.appendChild(el);
@@ -735,23 +691,17 @@
     (function initMarriageCert() {
         const signBtn     = $('#cert-sign-btn');
         const sigMoonName = $('#sig-moon-name');
-        const sigHimName  = $('#sig-him-name');
         const moonSigLine = $('#moon-sig-line');
         const seal        = $('#cert-seal');
         const prompt      = $('#cert-prompt');
         const signedNote  = $('#cert-signed-note');
         const dlWrap      = $('#cert-download-wrap');
-
         if (!signBtn) return;
-
-        // Pre-fill "Him" side immediately (he already signed)
-        sigHimName.textContent = 'Him ♡';
-        sigHimName.classList.add('signed');
 
         const signedMessages = [
             "It's official. Legally binding under moonlight. 🌙",
             "Signed, sealed, and witnessed by every star up there. ✦",
-            "You said yes. I'm keeping this forever. 💍",
+            "You said yes. Water is keeping this forever. 💍",
             "The moon herself has signed. That's final.",
         ];
 
@@ -759,7 +709,6 @@
             if (signBtn.disabled) return;
             signBtn.disabled = true;
 
-            // Animate the signature appearing letter by letter
             const name = 'Moon ♡';
             sigMoonName.textContent = '';
             sigMoonName.classList.add('signed');
@@ -771,26 +720,18 @@
                     sigMoonName.textContent += name[i++];
                     setTimeout(typeSig, 80);
                 } else {
-                    // Stamp the seal
                     setTimeout(() => {
                         seal.classList.add('stamped');
                         if (window._shootStar) window._shootStar();
                         spawnConfettiBurst(45);
                     }, 300);
-
-                    // Show message
                     setTimeout(() => {
-                        const msg = signedMessages[randInt(0, signedMessages.length - 1)];
-                        signedNote.textContent = msg;
+                        signedNote.textContent = signedMessages[randInt(0, signedMessages.length-1)];
                         signedNote.classList.add('visible');
                         prompt.style.opacity = '0';
                         signBtn.style.display = 'none';
                     }, 600);
-
-                    // Show download
-                    setTimeout(() => {
-                        dlWrap.style.display = 'block';
-                    }, 1400);
+                    setTimeout(() => { dlWrap.style.display = 'block'; }, 1400);
                 }
             }
             typeSig();

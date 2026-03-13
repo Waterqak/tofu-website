@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   MOON — style.css  (optimized)
+   MOON — style.css  (complete + optimized)
    ═══════════════════════════════════════════ */
 
 :root {
@@ -47,7 +47,6 @@ body {
 #nebula-canvas {
     position: fixed; inset: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0;
-    /* GPU layer — keeps nebula off main thread */
     will-change: contents;
 }
 #star-canvas {
@@ -61,7 +60,6 @@ body {
 .dust {
     position: absolute; border-radius: 50%; background: var(--gold); opacity: 0;
     animation: dustFall linear forwards;
-    /* GPU composited */
     will-change: transform, opacity;
 }
 @keyframes dustFall {
@@ -76,9 +74,7 @@ body {
     position: fixed; inset: 0; pointer-events: none; z-index: 3; overflow: hidden;
 }
 .confetti-piece {
-    position: absolute;
-    border-radius: 3px;
-    opacity: 0;
+    position: absolute; border-radius: 3px; opacity: 0;
     animation: confettiFall linear forwards;
     will-change: transform, opacity;
 }
@@ -89,10 +85,9 @@ body {
 
 /* ═══ ORBIT MOON ════════════════════════════════════════ */
 #orbit-moon {
-    position: fixed;
-    top: 0; left: 0;            /* anchor at origin; JS moves via transform */
+    position: fixed; top: 0; left: 0;
     z-index: 4; pointer-events: none;
-    will-change: transform;     /* GPU composited — no reflow */
+    will-change: transform;
 }
 .orbit-trail {
     position: absolute; width: 80px; height: 80px; border-radius: 50%;
@@ -125,8 +120,7 @@ body {
 #viz-canvas {
     position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
     pointer-events: none; z-index: 20; opacity: 0;
-    transition: opacity 1s ease;
-    will-change: contents;
+    transition: opacity 1s ease; will-change: contents;
 }
 #viz-canvas.active { opacity: 1; }
 
@@ -169,15 +163,12 @@ body {
 }
 @keyframes progressShine { to { background-position: 200% 0; } }
 
-/* ═══ CURSOR — GPU composited, no left/top ═══════════════ */
+/* ═══ CURSOR ════════════════════════════════════════════ */
 .custom-cursor {
-    position: fixed;
-    top: 0; left: 0;            /* anchor at origin; JS moves via transform */
+    position: fixed; top: 0; left: 0;
     width: 32px; height: 32px;
-    border: 1px solid rgba(200, 220, 248, 0.35);
-    border-radius: 50%;
+    border: 1px solid rgba(200, 220, 248, 0.35); border-radius: 50%;
     pointer-events: none; z-index: 99999;
-    /* NO left/top transitions — transform only */
     transition: width .35s var(--ease-out), height .35s var(--ease-out),
                 border-color .35s, background .35s, opacity .3s;
     will-change: transform;
@@ -228,7 +219,11 @@ body {
 }
 .welcome-sub {
     color: var(--text-muted); font-size: 15px; font-weight: 400;
-    letter-spacing: .2em; text-transform: uppercase; margin-bottom: 2.8rem;
+    letter-spacing: .2em; text-transform: uppercase; margin-bottom: .6rem;
+}
+.welcome-from {
+    color: rgba(232,201,106,.55); font-family: var(--font-head); font-style: italic;
+    font-size: 14px; margin-bottom: 2.4rem; letter-spacing: .06em;
 }
 #enter-btn {
     position: relative; overflow: hidden; background: transparent; color: var(--gold);
@@ -249,7 +244,7 @@ body {
     letter-spacing: .24em;
 }
 
-/* ═══ LIGHTBOX — fixed image zoom ══════════════════════ */
+/* ═══ LIGHTBOX — fully working image zoom ══════════════ */
 #lightbox {
     position: fixed; inset: 0; z-index: 8000;
     display: flex; align-items: center; justify-content: center;
@@ -259,45 +254,59 @@ body {
 #lightbox.open { opacity: 1; visibility: visible; }
 
 #lightbox-backdrop {
-    position: absolute; inset: 0; background: rgba(1,4,14,.93);
-    backdrop-filter: blur(20px); cursor: pointer;
+    position: absolute; inset: 0;
+    background: rgba(1, 4, 14, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    cursor: pointer;
 }
 
-/* The image itself — fills the available space properly */
-#lightbox-img {
+#lightbox-inner {
     position: relative; z-index: 1;
-    /* These ensure the image is always fully visible */
-    max-width: min(90vw, 1100px);
-    max-height: 88vh;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 1rem;
+    max-width: min(92vw, 1100px);
+    max-height: 90vh;
+    transform: scale(0.88) translateY(18px);
+    transition: transform .55s var(--ease-spring);
+}
+#lightbox.open #lightbox-inner { transform: scale(1) translateY(0); }
+
+#lightbox-img {
+    display: block;
+    max-width: 100%;
+    max-height: 80vh;
     width: auto;
     height: auto;
-    /* Never stretch beyond natural size */
     object-fit: contain;
-    border-radius: 16px;
-    box-shadow: 0 0 0 1px rgba(200,220,248,.08), 0 40px 80px rgba(0,0,0,.75);
-    transform: scale(0.88) translateY(16px);
-    transition: transform .55s var(--ease-spring), opacity .4s var(--ease-smooth);
-    /* Prevent image dragging */
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px rgba(200,220,248,.1), 0 40px 80px rgba(0,0,0,.8);
+    opacity: 0;
+    transition: opacity .4s var(--ease-smooth);
     user-select: none;
     -webkit-user-drag: none;
-    /* Start hidden — JS fades in after load */
-    opacity: 0;
-}
-#lightbox.open #lightbox-img {
-    transform: scale(1) translateY(0);
 }
 
+#lightbox-caption {
+    font-family: var(--font-head); font-style: italic;
+    font-size: 14px; color: var(--text-muted);
+    letter-spacing: .08em; text-align: center;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity .5s .2s, transform .5s .2s;
+}
+#lightbox.open #lightbox-caption { opacity: 1; transform: translateY(0); }
+
 #close-lightbox {
-    position: absolute; top: 24px; right: 32px; z-index: 2;
-    background: rgba(8,18,42,.7); border: 1px solid rgba(200,220,248,.12);
-    color: var(--text-muted); font-size: 1.1rem; cursor: pointer;
-    padding: 8px 12px; border-radius: 100px; line-height: 1;
-    transition: color .3s, transform .35s, background .3s;
-    backdrop-filter: blur(8px);
+    position: absolute; top: 20px; right: 24px; z-index: 2;
+    background: rgba(8,18,42,.8); border: 1px solid rgba(200,220,248,.14);
+    color: var(--text-muted); font-size: 1rem; cursor: pointer;
+    padding: 8px 14px; border-radius: 100px; line-height: 1;
+    transition: color .3s, transform .35s var(--ease-spring), background .3s;
+    backdrop-filter: blur(8px); letter-spacing: .05em;
 }
 #close-lightbox:hover {
     color: var(--silver); transform: rotate(90deg) scale(1.1);
-    background: rgba(200,220,248,.08);
+    background: rgba(200,220,248,.1);
 }
 
 /* ═══ HEADER ════════════════════════════════════════════ */
@@ -384,14 +393,12 @@ h2::after {
     background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,201,106,.08) 0%, transparent 70%);
     pointer-events: none;
 }
-
 .bday-stars { position: absolute; inset: 0; pointer-events: none; }
 .bday-star {
     position: absolute; left: var(--x); top: var(--y);
     color: var(--gold); font-size: 12px; opacity: .4;
     animation: bstarTwinkle 3s ease-in-out infinite;
-    animation-delay: var(--d);
-    will-change: opacity, transform;
+    animation-delay: var(--d); will-change: opacity, transform;
 }
 @keyframes bstarTwinkle { 0%,100%{opacity:.25;transform:scale(1)} 50%{opacity:.75;transform:scale(1.4)} }
 
@@ -399,8 +406,7 @@ h2::after {
 .bday-cake {
     font-size: 3.2rem; display: block; margin: 0 auto .8rem;
     filter: drop-shadow(0 0 16px rgba(232,201,106,.4));
-    animation: cakeWiggle 3s ease-in-out infinite;
-    will-change: transform;
+    animation: cakeWiggle 3s ease-in-out infinite; will-change: transform;
 }
 @keyframes cakeWiggle {
     0%,100% { transform: rotate(-3deg) scale(1); }
@@ -416,7 +422,6 @@ h2::after {
     text-transform: uppercase; font-weight: 400;
 }
 
-/* Countdown grid */
 .countdown-grid {
     display: flex; align-items: center; justify-content: center;
     gap: clamp(.4rem, 2vw, 1rem); margin-bottom: 1.5rem; flex-wrap: wrap;
@@ -429,9 +434,7 @@ h2::after {
     font-family: var(--font-head); font-size: clamp(2rem, 6vw, 3.5rem);
     font-weight: 600; color: var(--gold); line-height: 1;
     text-shadow: 0 0 30px rgba(232,201,106,.45), 0 0 60px rgba(232,201,106,.2);
-    transition: transform .15s var(--ease-spring);
-    min-width: 2ch; text-align: center;
-    will-change: transform;
+    min-width: 2ch; text-align: center; will-change: transform;
 }
 .cd-number.bump { animation: numBump .2s var(--ease-spring); }
 @keyframes numBump { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
@@ -547,13 +550,12 @@ h2::after {
 
 /* ═══ GALLERY ════════════════════════════════════════════ */
 .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 1rem; }
-@media (max-width: 480px) { .gallery { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .gallery { grid-template-columns: 1fr 1fr; gap: 10px; } }
 
 .gallery-item {
     position: relative; aspect-ratio: 1; border-radius: 13px;
     overflow: hidden; border: 1px solid rgba(200,220,248,.07);
-    cursor: zoom-in;   /* better UX hint that it zooms */
-    margin: 0;
+    cursor: zoom-in; margin: 0;
     transition: transform .55s var(--ease-out), box-shadow .55s, border-color .4s;
     will-change: transform;
 }
@@ -562,32 +564,235 @@ h2::after {
     background: linear-gradient(180deg, transparent 45%, rgba(1,5,18,.72) 100%);
     pointer-events: none;
 }
-/* Zoom icon overlay */
+/* Zoom icon */
 .gallery-item::after {
-    content: '⤢'; position: absolute; top: 10px; right: 12px; z-index: 2;
-    font-size: 16px; color: rgba(200,220,248,.55);
-    opacity: 0; transform: scale(0.7);
-    transition: opacity .3s, transform .3s;
+    content: '⤢'; position: absolute; top: 10px; right: 12px; z-index: 3;
+    font-size: 15px; color: rgba(255,255,255,.7);
+    opacity: 0; transform: scale(0.7) rotate(-10deg);
+    transition: opacity .3s, transform .35s var(--ease-spring);
     pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
 }
-.gallery-item:hover::after { opacity: 1; transform: scale(1); }
+.gallery-item:hover::after { opacity: 1; transform: scale(1) rotate(0deg); }
 
 .gallery-item figcaption {
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
     padding: .55rem .75rem; font-size: 11px; letter-spacing: .14em;
-    text-transform: uppercase; color: rgba(200,220,248,.42);
-    transform: translateY(5px); transition: color .4s, transform .4s;
+    text-transform: uppercase; color: rgba(200,220,248,.5);
+    transform: translateY(4px); transition: color .4s, transform .4s;
+    pointer-events: none;
 }
 .gallery-item img {
     width: 100%; height: 100%; object-fit: cover; display: block;
     transition: transform .7s var(--ease-out);
-    /* Ensure images load with correct aspect */
-    image-rendering: auto;
+    pointer-events: none; /* let the figure handle the click */
 }
-.gallery-item:hover { transform: translateY(-8px) scale(1.03); border-color: rgba(200,220,248,.2); box-shadow: 0 20px 50px rgba(0,0,15,.7), 0 0 30px rgba(100,160,255,.08); }
+.gallery-item:hover { transform: translateY(-8px) scale(1.03); border-color: rgba(200,220,248,.22); box-shadow: 0 20px 50px rgba(0,0,15,.7), 0 0 30px rgba(100,160,255,.1); }
 .gallery-item:hover img { transform: scale(1.08); }
 .gallery-item:hover figcaption { color: var(--silver); transform: translateY(0); }
 .caption { text-align: center; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-muted); margin-top: .3rem; }
+
+/* ═══ MARRIAGE CERTIFICATE ══════════════════════════════ */
+.cert-paper {
+    position: relative;
+    background: linear-gradient(160deg, #06101f 0%, #080f22 50%, #060d1c 100%);
+    border: 1.5px solid rgba(232,201,106,.35);
+    border-radius: 12px;
+    padding: clamp(1.8rem, 5vw, 2.8rem) clamp(1.4rem, 4vw, 2.6rem);
+    margin: .5rem 0 2rem;
+    overflow: hidden;
+    box-shadow:
+        0 0 0 4px rgba(232,201,106,.06),
+        0 0 0 5px rgba(200,220,248,.04),
+        inset 0 1px 0 rgba(255,255,255,.04),
+        0 20px 60px rgba(0,0,0,.5);
+    background-image:
+        repeating-linear-gradient(transparent, transparent 39px, rgba(200,220,248,.025) 39px, rgba(200,220,248,.025) 40px),
+        linear-gradient(160deg, #06101f 0%, #080f22 50%, #060d1c 100%);
+}
+.cert-corner {
+    position: absolute; width: 22px; height: 22px; pointer-events: none;
+}
+.cert-corner::before, .cert-corner::after {
+    content: ''; position: absolute; background: var(--gold); border-radius: 1px;
+}
+.cert-corner::before { width: 22px; height: 1.5px; top: 0; left: 0; }
+.cert-corner::after  { width: 1.5px; height: 22px; top: 0; left: 0; }
+.cert-corner-tl { top: 10px; left: 10px; }
+.cert-corner-tr { top: 10px; right: 10px; transform: scaleX(-1); }
+.cert-corner-bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
+.cert-corner-br { bottom: 10px; right: 10px; transform: scale(-1,-1); }
+
+.cert-stars { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.cert-star {
+    position: absolute; left: var(--cx); top: var(--cy);
+    color: var(--gold); font-size: 10px; opacity: .28;
+    animation: bstarTwinkle 3.8s ease-in-out infinite;
+    animation-delay: var(--cd);
+}
+.cert-paper > * { position: relative; z-index: 1; }
+
+.cert-eyebrow {
+    text-align: center; font-family: var(--font-body); font-size: 9px;
+    font-weight: 500; letter-spacing: .32em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: .9rem;
+}
+.cert-title {
+    font-family: var(--font-head); font-size: clamp(2.2rem, 6vw, 3.4rem);
+    font-weight: 500; font-style: italic; color: var(--silver);
+    text-align: center; letter-spacing: .02em; line-height: 1.1;
+    margin-bottom: .6rem; text-shadow: 0 0 60px rgba(200,220,248,.22);
+}
+.cert-divider {
+    display: flex; align-items: center; gap: .8rem; margin: .4rem 0 1.2rem;
+}
+.cert-divider-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,201,106,.45), transparent);
+}
+.cert-divider-moon { font-size: 1rem; line-height: 1; }
+.cert-intro {
+    text-align: center; font-family: var(--font-head); font-style: italic;
+    font-size: 13px; color: var(--text-body); margin-bottom: 1.2rem;
+}
+.cert-names {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: clamp(.8rem, 3vw, 2rem); margin-bottom: 1.4rem; flex-wrap: wrap;
+}
+.cert-name-block {
+    display: flex; flex-direction: column; align-items: center; gap: .3rem; min-width: 100px;
+}
+.cert-name {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 600;
+    line-height: 1; position: relative; padding-bottom: .3rem;
+}
+.cert-name::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 1.5px; border-radius: 2px;
+}
+.cert-name-him        { color: var(--gold); }
+.cert-name-him::after { background: var(--gold); }
+.cert-name-moon        { color: var(--silver); }
+.cert-name-moon::after { background: var(--silver); }
+.cert-name-label {
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 400;
+}
+.cert-and {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(1rem, 2.5vw, 1.3rem); color: var(--text-muted); padding-bottom: 1.1rem;
+}
+.cert-body {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(.9rem, 2.2vw, 1.05rem); color: var(--text-body);
+    text-align: center; line-height: 1.8; margin-bottom: 1.4rem;
+}
+.cert-vow-block {
+    border: 1px solid rgba(200,220,248,.1); border-radius: 10px;
+    background: rgba(200,220,248,.025); padding: 1.1rem 1.4rem;
+    margin-bottom: 1.4rem; text-align: center;
+}
+.cert-vow-label {
+    font-size: 9px; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--gold); font-weight: 500; margin-bottom: .7rem;
+}
+.cert-vow {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(.88rem, 2vw, 1rem); color: var(--silver); line-height: 1.9;
+}
+.cert-date-row {
+    display: flex; flex-direction: column; align-items: center; gap: .25rem; margin-bottom: 1.6rem;
+}
+.cert-date-label {
+    font-size: 9px; letter-spacing: .25em; text-transform: uppercase; color: var(--text-muted);
+}
+.cert-date-value {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(.95rem, 2.2vw, 1.15rem); color: var(--silver);
+    border-bottom: 1px solid rgba(200,220,248,.25); padding-bottom: .25rem;
+    min-width: 200px; text-align: center;
+}
+.cert-sigs {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1.4rem; flex-wrap: wrap;
+}
+.cert-sig-block {
+    flex: 1; min-width: 100px; max-width: 160px;
+    display: flex; flex-direction: column; align-items: center; gap: .3rem;
+}
+.cert-sig-line {
+    width: 100%; height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(232,201,106,.6), transparent);
+    border-radius: 2px; transition: background 0.6s ease;
+}
+.cert-sig-line-water {
+    background: linear-gradient(90deg, transparent, rgba(232,201,106,.7), transparent);
+    box-shadow: 0 0 8px rgba(232,201,106,.3);
+}
+.cert-sig-line-moon {
+    background: linear-gradient(90deg, transparent, rgba(200,220,248,.28), transparent);
+}
+.cert-sig-line-moon.signed {
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    box-shadow: 0 0 10px rgba(232,201,106,.4);
+}
+.cert-sig-name {
+    font-family: var(--font-script); font-size: clamp(1.3rem, 3vw, 1.7rem);
+    color: var(--text-muted); transition: color .5s, text-shadow .5s;
+    text-align: center; min-height: 1.8rem;
+}
+.cert-sig-name.signed { color: var(--gold); text-shadow: 0 0 20px rgba(232,201,106,.5); }
+.cert-sig-water-name  { color: var(--gold); text-shadow: 0 0 20px rgba(232,201,106,.5); }
+.cert-sig-moon-name   { color: rgba(200,220,248,.28); }
+.cert-sig-label {
+    font-size: 8px; letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted);
+}
+.cert-seal {
+    position: relative; width: 74px; height: 74px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.cert-seal.stamped { animation: sealStamp .55s var(--ease-spring) forwards; }
+@keyframes sealStamp {
+    0%   { transform: scale(2.4) rotate(-8deg); opacity: 0; }
+    60%  { transform: scale(0.92) rotate(2deg); opacity: 1; }
+    80%  { transform: scale(1.06) rotate(-1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+.cert-seal-ring { position: absolute; border-radius: 50%; border-style: solid; }
+.cert-seal-outer { inset: 0; border-width: 1.5px; border-color: rgba(232,201,106,.4); }
+.cert-seal-inner { inset: 5px; border-width: 1px; border-color: rgba(200,220,248,.25); background: rgba(232,201,106,.04); }
+.cert-seal.stamped .cert-seal-outer { border-color: var(--gold); box-shadow: 0 0 14px rgba(232,201,106,.4); }
+.cert-seal.stamped .cert-seal-inner { border-color: rgba(232,201,106,.5); background: rgba(232,201,106,.08); }
+.cert-seal-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.cert-seal-moon { font-size: 1rem; line-height: 1; }
+.cert-seal-text { font-size: 6.5px; letter-spacing: .1em; color: var(--text-muted); text-align: center; text-transform: uppercase; line-height: 1.4; transition: color .5s; }
+.cert-seal.stamped .cert-seal-text { color: var(--gold); }
+.cert-footer { text-align: center; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .3rem; }
+.cert-small-print { text-align: center; font-size: 8px; color: rgba(110,137,184,.45); font-style: italic; }
+
+.cert-action { text-align: center; margin-top: .5rem; }
+.cert-prompt {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--text-muted);
+    margin-bottom: 1.2rem; transition: opacity .5s;
+}
+.cert-sign-btn { font-size: 14px !important; padding: 15px 46px !important; }
+.cert-signed-note {
+    font-family: var(--font-head); font-style: italic;
+    font-size: clamp(1rem, 2.8vw, 1.3rem); color: var(--gold);
+    min-height: 1.8rem; margin-top: 1rem;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .7s var(--ease-out), transform .7s var(--ease-out);
+    text-shadow: 0 0 24px rgba(232,201,106,.3);
+}
+.cert-signed-note.visible { opacity: 1; transform: translateY(0); }
+.cert-download-wrap {
+    text-align: center; margin-top: 1.2rem;
+    animation: revealUp .8s var(--ease-out) forwards;
+}
+.cert-dl-btn { text-decoration: none !important; display: inline-block; font-size: 13px !important; padding: 13px 38px !important; }
+.cert-dl-btn:hover { text-decoration: none !important; }
 
 /* ═══ LETTER ═════════════════════════════════════════════ */
 .letter-card { background: rgba(5, 12, 30, 0.70); }
@@ -634,6 +839,8 @@ footer {
     #music-label { display: none; }
     .countdown-block { min-width: 56px; }
     .bday-title { font-size: 1.3rem; }
+    .cert-sigs { justify-content: center; }
+    .cert-sig-block { min-width: 120px; }
 }
 
 /* ═══ REDUCE MOTION ══════════════════════════════════════ */
@@ -644,336 +851,3 @@ footer {
         transition-duration: 0.01ms !important;
     }
 }
-
-/* ═══════════════════════════════════════════
-   MARRIAGE CERTIFICATE SECTION
-   Append this to the bottom of style.css
-   ═══════════════════════════════════════════ */
-
-/* ── Paper ───────────────────────────────── */
-.cert-paper {
-    position: relative;
-    background: linear-gradient(160deg, #06101f 0%, #080f22 50%, #060d1c 100%);
-    border: 1.5px solid rgba(232,201,106,.35);
-    border-radius: 12px;
-    padding: clamp(1.8rem, 5vw, 2.8rem) clamp(1.4rem, 4vw, 2.6rem);
-    margin: .5rem 0 2rem;
-    overflow: hidden;
-    box-shadow:
-        0 0 0 4px rgba(232,201,106,.06),
-        0 0 0 5px rgba(200,220,248,.04),
-        inset 0 1px 0 rgba(255,255,255,.04),
-        0 20px 60px rgba(0,0,0,.5);
-    /* Subtle paper texture via repeating gradient */
-    background-image:
-        repeating-linear-gradient(
-            transparent, transparent 39px,
-            rgba(200,220,248,.028) 39px,
-            rgba(200,220,248,.028) 40px
-        ),
-        linear-gradient(160deg, #06101f 0%, #080f22 50%, #060d1c 100%);
-}
-
-/* ── Corner ornaments ─────────────────────── */
-.cert-corner {
-    position: absolute;
-    width: 22px; height: 22px;
-    pointer-events: none;
-}
-.cert-corner::before,
-.cert-corner::after {
-    content: '';
-    position: absolute;
-    background: var(--gold);
-    border-radius: 1px;
-}
-.cert-corner::before { width: 22px; height: 1.5px; top: 0; left: 0; }
-.cert-corner::after  { width: 1.5px; height: 22px; top: 0; left: 0; }
-
-.cert-corner-tl { top: 10px; left: 10px; }
-.cert-corner-tr { top: 10px; right: 10px; transform: scaleX(-1); }
-.cert-corner-bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
-.cert-corner-br { bottom: 10px; right: 10px; transform: scale(-1,-1); }
-
-/* ── Background stars ─────────────────────── */
-.cert-stars { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.cert-star {
-    position: absolute;
-    left: var(--cx); top: var(--cy);
-    color: var(--gold); font-size: 10px; opacity: .28;
-    animation: bstarTwinkle 3.8s ease-in-out infinite;
-    animation-delay: var(--cd);
-}
-
-/* ── Typography ──────────────────────────── */
-.cert-paper > * { position: relative; z-index: 1; }
-
-.cert-eyebrow {
-    text-align: center;
-    font-family: var(--font-body);
-    font-size: 9px; font-weight: 500;
-    letter-spacing: .32em; text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: .9rem;
-}
-
-.cert-title {
-    font-family: var(--font-head);
-    font-size: clamp(2.2rem, 6vw, 3.4rem);
-    font-weight: 500; font-style: italic;
-    color: var(--silver);
-    text-align: center;
-    letter-spacing: .02em;
-    line-height: 1.1;
-    margin-bottom: .6rem;
-    text-shadow: 0 0 60px rgba(200,220,248,.22);
-}
-
-.cert-divider {
-    display: flex; align-items: center;
-    gap: .8rem; margin: .4rem 0 1.2rem;
-}
-.cert-divider-line {
-    flex: 1; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(232,201,106,.45), transparent);
-}
-.cert-divider-moon { font-size: 1rem; line-height: 1; }
-
-.cert-intro {
-    text-align: center;
-    font-family: var(--font-head); font-style: italic;
-    font-size: 13px; color: var(--text-body);
-    margin-bottom: 1.2rem;
-}
-
-/* ── Names row ───────────────────────────── */
-.cert-names {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: clamp(.8rem, 3vw, 2rem);
-    margin-bottom: 1.4rem;
-    flex-wrap: wrap;
-}
-.cert-name-block {
-    display: flex; flex-direction: column;
-    align-items: center; gap: .3rem;
-    min-width: 100px;
-}
-.cert-name {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 600;
-    line-height: 1;
-    position: relative;
-    padding-bottom: .3rem;
-}
-.cert-name::after {
-    content: '';
-    position: absolute; bottom: 0; left: 0; right: 0;
-    height: 1.5px;
-    border-radius: 2px;
-}
-.cert-name-him       { color: var(--gold); }
-.cert-name-him::after { background: var(--gold); }
-.cert-name-moon      { color: var(--silver); }
-.cert-name-moon::after { background: var(--silver); }
-.cert-name-label {
-    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
-    color: var(--text-muted); font-weight: 400;
-}
-.cert-and {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(1rem, 2.5vw, 1.3rem);
-    color: var(--text-muted);
-    padding-bottom: 1.1rem;
-}
-
-/* ── Body ────────────────────────────────── */
-.cert-body {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(.9rem, 2.2vw, 1.05rem);
-    color: var(--text-body);
-    text-align: center;
-    line-height: 1.8;
-    margin-bottom: 1.4rem;
-}
-
-/* ── Vow block ───────────────────────────── */
-.cert-vow-block {
-    border: 1px solid rgba(200,220,248,.1);
-    border-radius: 10px;
-    background: rgba(200,220,248,.025);
-    padding: 1.1rem 1.4rem;
-    margin-bottom: 1.4rem;
-    text-align: center;
-}
-.cert-vow-label {
-    font-size: 9px; letter-spacing: .3em; text-transform: uppercase;
-    color: var(--gold); font-weight: 500;
-    margin-bottom: .7rem;
-}
-.cert-vow {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(.88rem, 2vw, 1rem);
-    color: var(--silver); line-height: 1.9;
-}
-
-/* ── Date ────────────────────────────────── */
-.cert-date-row {
-    display: flex; flex-direction: column; align-items: center;
-    gap: .25rem; margin-bottom: 1.6rem;
-}
-.cert-date-label {
-    font-size: 9px; letter-spacing: .25em; text-transform: uppercase;
-    color: var(--text-muted);
-}
-.cert-date-value {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(.95rem, 2.2vw, 1.15rem);
-    color: var(--silver);
-    border-bottom: 1px solid rgba(200,220,248,.25);
-    padding-bottom: .25rem;
-    min-width: 200px; text-align: center;
-}
-
-/* ── Signatures ──────────────────────────── */
-.cert-sigs {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.4rem;
-    flex-wrap: wrap;
-}
-.cert-sig-block {
-    flex: 1; min-width: 100px; max-width: 160px;
-    display: flex; flex-direction: column;
-    align-items: center; gap: .3rem;
-}
-.cert-sig-line {
-    width: 100%; height: 1.5px;
-    background: linear-gradient(90deg, transparent, rgba(232,201,106,.6), transparent);
-    border-radius: 2px;
-    transition: background 0.6s ease;
-}
-.cert-sig-line-moon {
-    background: linear-gradient(90deg, transparent, rgba(200,220,248,.35), transparent);
-}
-/* When signed, Moon's line glows gold */
-.cert-sig-line-moon.signed {
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    box-shadow: 0 0 10px rgba(232,201,106,.4);
-}
-.cert-sig-name {
-    font-family: var(--font-script);
-    font-size: clamp(1.3rem, 3vw, 1.7rem);
-    color: var(--text-muted);
-    transition: color .5s, text-shadow .5s;
-    text-align: center;
-    min-height: 1.8rem;
-}
-.cert-sig-name.signed {
-    color: var(--gold);
-    text-shadow: 0 0 20px rgba(232,201,106,.5);
-}
-.cert-sig-label {
-    font-size: 8px; letter-spacing: .2em; text-transform: uppercase;
-    color: var(--text-muted);
-}
-.cert-sig-moon-name { color: rgba(200,220,248,.28); }
-
-/* ── Seal ────────────────────────────────── */
-.cert-seal {
-    position: relative;
-    width: 74px; height: 74px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    transition: transform .6s var(--ease-spring);
-}
-.cert-seal.stamped { animation: sealStamp .55s var(--ease-spring) forwards; }
-@keyframes sealStamp {
-    0%   { transform: scale(2.4) rotate(-8deg); opacity: 0; }
-    60%  { transform: scale(0.92) rotate(2deg); opacity: 1; }
-    80%  { transform: scale(1.06) rotate(-1deg); }
-    100% { transform: scale(1) rotate(0deg); }
-}
-
-.cert-seal-ring {
-    position: absolute; border-radius: 50%;
-    border-style: solid;
-}
-.cert-seal-outer {
-    inset: 0;
-    border-width: 1.5px;
-    border-color: rgba(232,201,106,.4);
-}
-.cert-seal-inner {
-    inset: 5px;
-    border-width: 1px;
-    border-color: rgba(200,220,248,.25);
-    background: rgba(232,201,106,.04);
-}
-.cert-seal.stamped .cert-seal-outer { border-color: var(--gold); box-shadow: 0 0 14px rgba(232,201,106,.4); }
-.cert-seal.stamped .cert-seal-inner { border-color: rgba(232,201,106,.5); background: rgba(232,201,106,.08); }
-
-.cert-seal-content {
-    position: relative; z-index: 1;
-    display: flex; flex-direction: column;
-    align-items: center; gap: 1px;
-}
-.cert-seal-moon  { font-size: 1rem; line-height: 1; }
-.cert-seal-text  {
-    font-size: 6.5px; letter-spacing: .1em;
-    color: var(--text-muted); text-align: center;
-    text-transform: uppercase; line-height: 1.4;
-    transition: color .5s;
-}
-.cert-seal.stamped .cert-seal-text { color: var(--gold); }
-
-/* ── Footer text on paper ─────────────────── */
-.cert-footer {
-    text-align: center;
-    font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--text-muted); margin-bottom: .3rem;
-}
-.cert-small-print {
-    text-align: center;
-    font-size: 8px; color: rgba(110,137,184,.45);
-    font-style: italic;
-}
-
-/* ── Action area below paper ──────────────── */
-.cert-action { text-align: center; }
-.cert-prompt {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(1rem, 2.5vw, 1.25rem);
-    color: var(--text-muted); margin-bottom: 1.2rem;
-    transition: opacity .5s;
-}
-.cert-sign-btn { font-size: 14px !important; padding: 15px 46px !important; }
-
-.cert-signed-note {
-    font-family: var(--font-head); font-style: italic;
-    font-size: clamp(1rem, 2.8vw, 1.3rem);
-    color: var(--gold);
-    min-height: 1.8rem;
-    margin-top: 1rem;
-    opacity: 0; transform: translateY(8px);
-    transition: opacity .7s var(--ease-out), transform .7s var(--ease-out);
-    text-shadow: 0 0 24px rgba(232,201,106,.3);
-}
-.cert-signed-note.visible { opacity: 1; transform: translateY(0); }
-
-/* ── Download button ──────────────────────── */
-.cert-download-wrap {
-    text-align: center;
-    margin-top: 1.2rem;
-    animation: revealUp .8s var(--ease-out) forwards;
-}
-.cert-dl-btn {
-    text-decoration: none !important;
-    display: inline-block;
-    font-size: 13px !important;
-    padding: 13px 38px !important;
-}
-.cert-dl-btn:hover { text-decoration: none !important; }

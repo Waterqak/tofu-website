@@ -24,10 +24,13 @@
     <div class="custom-cursor"><div class="cursor-core"></div></div>
 
     <!-- Lightbox -->
-    <div id="lightbox" aria-hidden="true">
+    <div id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Photo viewer">
         <div id="lightbox-backdrop"></div>
-        <button id="close-lightbox" aria-label="Close">✕</button>
-        <img id="lightbox-img" src="" alt="Our memory">
+        <button id="close-lightbox" aria-label="Close photo">✕</button>
+        <div id="lightbox-inner">
+            <img id="lightbox-img" src="" alt="Our memory">
+            <p id="lightbox-caption"></p>
+        </div>
     </div>
 
     <!-- Birthday confetti layer -->
@@ -44,6 +47,7 @@
             <div class="welcome-moon reveal-text" style="animation-delay:.1s">🌙</div>
             <h1 class="reveal-text" style="animation-delay:.45s">For Moon</h1>
             <p class="welcome-sub reveal-text" style="animation-delay:.8s">A small piece of sky, made only for you.</p>
+            <p class="welcome-from reveal-text" style="animation-delay:1s">from Water, with love</p>
             <button id="enter-btn" class="reveal-text" style="animation-delay:1.2s">Step Inside &nbsp;✦</button>
         </div>
     </div>
@@ -99,22 +103,22 @@
             </div>
             <div id="countdown-wrap">
                 <div class="countdown-grid">
-                    <div class="countdown-block" id="cd-days">
+                    <div class="countdown-block">
                         <div class="cd-number" id="cd-d">--</div>
                         <div class="cd-label">days</div>
                     </div>
                     <div class="countdown-sep">:</div>
-                    <div class="countdown-block" id="cd-hours">
+                    <div class="countdown-block">
                         <div class="cd-number" id="cd-h">--</div>
                         <div class="cd-label">hours</div>
                     </div>
                     <div class="countdown-sep">:</div>
-                    <div class="countdown-block" id="cd-mins">
+                    <div class="countdown-block">
                         <div class="cd-number" id="cd-m">--</div>
                         <div class="cd-label">minutes</div>
                     </div>
                     <div class="countdown-sep">:</div>
-                    <div class="countdown-block" id="cd-secs">
+                    <div class="countdown-block">
                         <div class="cd-number" id="cd-s">--</div>
                         <div class="cd-label">seconds</div>
                     </div>
@@ -220,50 +224,29 @@
             <h2><span class="h2-icon">📷</span> Moments I Keep</h2>
             <p class="card-sub">Nothing special — just us. That's what makes them special.</p>
             <div class="gallery">
-                <figure class="gallery-item">
-                    <img src="roblox.png" alt="Playing Roblox together" class="enlargeable">
+                <figure class="gallery-item" data-caption="our game nights">
+                    <img src="roblox.png" alt="Playing Roblox together" class="enlargeable" data-caption="our game nights">
                     <figcaption>our game nights</figcaption>
                 </figure>
-                <figure class="gallery-item">
-                    <img src="discord.png" alt="Our chats" class="enlargeable">
+                <figure class="gallery-item" data-caption="that one message">
+                    <img src="discord.png" alt="Our chats" class="enlargeable" data-caption="that one message">
                     <figcaption>that one message</figcaption>
                 </figure>
-                <figure class="gallery-item">
-                    <img src="game.png" alt="Gaming together" class="enlargeable">
+                <figure class="gallery-item" data-caption="us, as always">
+                    <img src="game.png" alt="Gaming together" class="enlargeable" data-caption="us, as always">
                     <figcaption>us, as always</figcaption>
                 </figure>
             </div>
             <p class="caption">tap any photo to open it ✦</p>
         </section>
 
-        <!-- Letter -->
-        <section class="card tilt-card letter-card" id="letter-card">
-            <div class="card-shimmer"></div>
-            <h2><span class="h2-icon">🌙</span> A Letter, From Me</h2>
-            <div class="letter-paper">
-                <p class="letter-line" id="line-1"></p>
-                <p class="letter-line" id="line-2"></p>
-                <p class="letter-line" id="line-3"></p>
-                <p class="letter-line letter-sig" id="line-sig"></p>
-            </div>
-        </section>
-
-        <!-- ════════════════════════════════════════════════════
-     MARRIAGE CERTIFICATE SECTION
-     Add this block inside <main class="container"> in index.html,
-     after the letter-card section and before </main>
-     ════════════════════════════════════════════════════ -->
-
         <!-- Marriage Certificate -->
         <section class="card tilt-card" id="marry-card">
             <div class="card-shimmer"></div>
-
             <h2><span class="h2-icon">💍</span> Will You Be My Wife?</h2>
             <p class="card-sub">A very serious, extremely official, completely binding document. Mostly.</p>
 
-            <!-- The paper itself -->
             <div class="cert-paper" id="cert-paper">
-
                 <div class="cert-stars" aria-hidden="true">
                     <span class="cert-star" style="--cx:6%;--cy:8%;--cd:0s">✦</span>
                     <span class="cert-star" style="--cx:94%;--cy:7%;--cd:.4s">✦</span>
@@ -273,28 +256,23 @@
                     <span class="cert-star" style="--cx:8%;--cy:50%;--cd:1s">⋆</span>
                     <span class="cert-star" style="--cx:92%;--cy:50%;--cd:.3s">✦</span>
                 </div>
-
-                <!-- Corner ornaments -->
                 <div class="cert-corner cert-corner-tl" aria-hidden="true"></div>
                 <div class="cert-corner cert-corner-tr" aria-hidden="true"></div>
                 <div class="cert-corner cert-corner-bl" aria-hidden="true"></div>
                 <div class="cert-corner cert-corner-br" aria-hidden="true"></div>
 
                 <p class="cert-eyebrow">✦ &nbsp; C E R T I F I C A T E &nbsp; O F &nbsp; U N I O N &nbsp; ✦</p>
-
                 <h3 class="cert-title">Marriage</h3>
-
                 <div class="cert-divider" aria-hidden="true">
                     <span class="cert-divider-line"></span>
                     <span class="cert-divider-moon">🌙</span>
                     <span class="cert-divider-line"></span>
                 </div>
-
                 <p class="cert-intro">This document joyfully declares and bears witness that</p>
 
                 <div class="cert-names">
                     <div class="cert-name-block">
-                        <span class="cert-name cert-name-him">Him</span>
+                        <span class="cert-name cert-name-him">Water</span>
                         <span class="cert-name-label">party of the first part</span>
                     </div>
                     <span class="cert-and">and</span>
@@ -329,14 +307,11 @@
                 </div>
 
                 <div class="cert-sigs">
-                    <!-- Him signature -->
                     <div class="cert-sig-block">
-                        <div class="cert-sig-line"></div>
-                        <span class="cert-sig-name" id="sig-him-name">___________</span>
-                        <span class="cert-sig-label">Signature · Him</span>
+                        <div class="cert-sig-line cert-sig-line-water"></div>
+                        <span class="cert-sig-name cert-sig-water-name signed" id="sig-water-name">Water ♡</span>
+                        <span class="cert-sig-label">Signature · Water</span>
                     </div>
-
-                    <!-- Seal in centre -->
                     <div class="cert-seal" id="cert-seal" aria-label="Official seal">
                         <div class="cert-seal-ring cert-seal-outer"></div>
                         <div class="cert-seal-ring cert-seal-inner"></div>
@@ -345,8 +320,6 @@
                             <span class="cert-seal-text">OFFICIAL<br>SEAL</span>
                         </div>
                     </div>
-
-                    <!-- Moon signature -->
                     <div class="cert-sig-block">
                         <div class="cert-sig-line cert-sig-line-moon" id="moon-sig-line"></div>
                         <span class="cert-sig-name cert-sig-moon-name" id="sig-moon-name">___________</span>
@@ -354,31 +327,33 @@
                     </div>
                 </div>
 
-                <p class="cert-footer">
-                    written under moonlight &nbsp;·&nbsp; sealed with love &nbsp;·&nbsp; binding under all known stars
-                </p>
-                <p class="cert-small-print">
-                    This certificate carries no legal weight but all the emotional weight in the world.
-                </p>
+                <p class="cert-footer">written under moonlight &nbsp;·&nbsp; sealed with love &nbsp;·&nbsp; binding under all known stars</p>
+                <p class="cert-small-print">This certificate carries no legal weight but all the emotional weight in the world.</p>
+            </div>
 
-            </div><!-- /cert-paper -->
-
-            <!-- Sign interaction -->
             <div class="cert-action" id="cert-action">
                 <p class="cert-prompt" id="cert-prompt">She just needs to sign. One tap.</p>
-                <button class="moon-btn cert-sign-btn" id="cert-sign-btn">
-                    ✦ &nbsp; Sign Here, Moon &nbsp; 💍
-                </button>
+                <button class="moon-btn cert-sign-btn" id="cert-sign-btn">✦ &nbsp; Sign Here, Moon &nbsp; 💍</button>
                 <p class="cert-signed-note" id="cert-signed-note"></p>
             </div>
 
-            <!-- Download -->
             <div class="cert-download-wrap" id="cert-download-wrap" style="display:none">
                 <a class="moon-btn cert-dl-btn" href="moon_marriage_certificate.pdf" download="moon_marriage_certificate.pdf">
                     🌙 &nbsp; Download Your Certificate
                 </a>
             </div>
+        </section>
 
+        <!-- Letter -->
+        <section class="card tilt-card letter-card" id="letter-card">
+            <div class="card-shimmer"></div>
+            <h2><span class="h2-icon">🌙</span> A Letter, From Me</h2>
+            <div class="letter-paper">
+                <p class="letter-line" id="line-1"></p>
+                <p class="letter-line" id="line-2"></p>
+                <p class="letter-line" id="line-3"></p>
+                <p class="letter-line letter-sig" id="line-sig"></p>
+            </div>
         </section>
 
     </main>
