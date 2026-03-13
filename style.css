@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   MOON — style.css
+   MOON — style.css  (optimized)
    ═══════════════════════════════════════════ */
 
 :root {
@@ -47,10 +47,13 @@ body {
 #nebula-canvas {
     position: fixed; inset: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0;
+    /* GPU layer — keeps nebula off main thread */
+    will-change: contents;
 }
 #star-canvas {
     position: fixed; inset: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 1;
+    will-change: contents;
 }
 #dust-container {
     position: fixed; inset: 0; pointer-events: none; z-index: 2; overflow: hidden;
@@ -58,6 +61,8 @@ body {
 .dust {
     position: absolute; border-radius: 50%; background: var(--gold); opacity: 0;
     animation: dustFall linear forwards;
+    /* GPU composited */
+    will-change: transform, opacity;
 }
 @keyframes dustFall {
     0%   { opacity: 0;   transform: translateY(-8px) rotate(0deg); }
@@ -75,6 +80,7 @@ body {
     border-radius: 3px;
     opacity: 0;
     animation: confettiFall linear forwards;
+    will-change: transform, opacity;
 }
 @keyframes confettiFall {
     0%   { opacity: 1; transform: translateY(-20px) rotate(0deg); }
@@ -83,8 +89,10 @@ body {
 
 /* ═══ ORBIT MOON ════════════════════════════════════════ */
 #orbit-moon {
-    position: fixed; z-index: 4; pointer-events: none;
-    transform: translate(-50%, -50%); will-change: left, top;
+    position: fixed;
+    top: 0; left: 0;            /* anchor at origin; JS moves via transform */
+    z-index: 4; pointer-events: none;
+    will-change: transform;     /* GPU composited — no reflow */
 }
 .orbit-trail {
     position: absolute; width: 80px; height: 80px; border-radius: 50%;
@@ -96,6 +104,7 @@ body {
     background: radial-gradient(circle, rgba(232,201,106,0.28) 0%, transparent 65%);
     top: 50%; left: 50%; transform: translate(-50%,-50%);
     filter: blur(8px); animation: orbitGlowPulse 4.5s ease-in-out infinite;
+    will-change: opacity, transform;
 }
 @keyframes orbitGlowPulse {
     0%,100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
@@ -105,6 +114,7 @@ body {
     position: relative; z-index: 1; font-size: 1.7rem; display: block;
     line-height: 1; filter: drop-shadow(0 0 12px rgba(232,201,106,0.6));
     animation: moonBob 5s ease-in-out infinite; user-select: none;
+    will-change: transform;
 }
 @keyframes moonBob {
     0%,100% { transform: scale(1) rotate(-6deg); }
@@ -116,6 +126,7 @@ body {
     position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
     pointer-events: none; z-index: 20; opacity: 0;
     transition: opacity 1s ease;
+    will-change: contents;
 }
 #viz-canvas.active { opacity: 1; }
 
@@ -127,6 +138,7 @@ body {
     position: absolute; width: 110px; height: 110px;
     top: 50%; left: 50%; transform: translate(-50%, -50%);
     pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
+    will-change: contents;
 }
 #music-ring-canvas.active { opacity: 1; }
 
@@ -153,16 +165,22 @@ body {
     transition: width 0.08s linear;
     animation: progressShine 4s linear infinite;
     box-shadow: 0 0 10px var(--gold);
+    will-change: width;
 }
 @keyframes progressShine { to { background-position: 200% 0; } }
 
-/* ═══ CURSOR ════════════════════════════════════════════ */
+/* ═══ CURSOR — GPU composited, no left/top ═══════════════ */
 .custom-cursor {
-    position: fixed; top: 0; left: 0; width: 32px; height: 32px;
-    border: 1px solid rgba(200, 220, 248, 0.35); border-radius: 50%;
-    pointer-events: none; z-index: 99999; transform: translate(-50%, -50%);
-    transition: width .35s var(--ease-out), height .35s var(--ease-out), border-color .35s, background .35s;
-    will-change: left, top;
+    position: fixed;
+    top: 0; left: 0;            /* anchor at origin; JS moves via transform */
+    width: 32px; height: 32px;
+    border: 1px solid rgba(200, 220, 248, 0.35);
+    border-radius: 50%;
+    pointer-events: none; z-index: 99999;
+    /* NO left/top transitions — transform only */
+    transition: width .35s var(--ease-out), height .35s var(--ease-out),
+                border-color .35s, background .35s, opacity .3s;
+    will-change: transform;
 }
 .cursor-core {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -186,7 +204,7 @@ body {
 #welcome-screen.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
 
 .welcome-orbs { position: absolute; inset: 0; pointer-events: none; }
-.orb { position: absolute; border-radius: 50%; filter: blur(90px); animation: orbPulse 9s ease-in-out infinite; }
+.orb { position: absolute; border-radius: 50%; filter: blur(90px); animation: orbPulse 9s ease-in-out infinite; will-change: transform, opacity; }
 .orb-1 { width: 600px; height: 600px; background: rgba(50,80,200,.09);  top:-150px; left:-180px; animation-delay:0s; }
 .orb-2 { width: 500px; height: 500px; background: rgba(170,130,70,.08); bottom:-100px; right:-130px; animation-delay:-3.5s; }
 .orb-3 { width: 350px; height: 350px; background: rgba(80,150,255,.06); top:40%; left:55%; animation-delay:-6s; }
@@ -197,6 +215,7 @@ body {
     font-size: 5rem; display: block; margin-bottom: 1.2rem;
     filter: drop-shadow(0 0 44px rgba(232,201,106,.55));
     animation: moonDrift 5.5s ease-in-out infinite 2s;
+    will-change: transform;
 }
 @keyframes moonDrift { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
 .reveal-text { opacity: 0; transform: translateY(22px); animation: revealUp .9s var(--ease-out) forwards; }
@@ -230,34 +249,56 @@ body {
     letter-spacing: .24em;
 }
 
-/* ═══ LIGHTBOX ══════════════════════════════════════════ */
+/* ═══ LIGHTBOX — fixed image zoom ══════════════════════ */
 #lightbox {
     position: fixed; inset: 0; z-index: 8000;
     display: flex; align-items: center; justify-content: center;
     opacity: 0; visibility: hidden;
-    transition: opacity .5s var(--ease-smooth), visibility .5s;
+    transition: opacity .45s var(--ease-smooth), visibility .45s;
 }
 #lightbox.open { opacity: 1; visibility: visible; }
+
 #lightbox-backdrop {
     position: absolute; inset: 0; background: rgba(1,4,14,.93);
     backdrop-filter: blur(20px); cursor: pointer;
 }
+
+/* The image itself — fills the available space properly */
 #lightbox-img {
     position: relative; z-index: 1;
-    max-width: min(88%, 900px); max-height: 85vh;
+    /* These ensure the image is always fully visible */
+    max-width: min(90vw, 1100px);
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    /* Never stretch beyond natural size */
+    object-fit: contain;
     border-radius: 16px;
     box-shadow: 0 0 0 1px rgba(200,220,248,.08), 0 40px 80px rgba(0,0,0,.75);
-    transform: scale(0.91) translateY(12px);
-    transition: transform .55s var(--ease-spring); object-fit: contain;
+    transform: scale(0.88) translateY(16px);
+    transition: transform .55s var(--ease-spring), opacity .4s var(--ease-smooth);
+    /* Prevent image dragging */
+    user-select: none;
+    -webkit-user-drag: none;
+    /* Start hidden — JS fades in after load */
+    opacity: 0;
 }
-#lightbox.open #lightbox-img { transform: scale(1) translateY(0); }
+#lightbox.open #lightbox-img {
+    transform: scale(1) translateY(0);
+}
+
 #close-lightbox {
     position: absolute; top: 24px; right: 32px; z-index: 2;
-    background: none; border: none; color: var(--text-muted);
-    font-size: 1.4rem; cursor: pointer; padding: 8px; line-height: 1;
-    transition: color .3s, transform .35s;
+    background: rgba(8,18,42,.7); border: 1px solid rgba(200,220,248,.12);
+    color: var(--text-muted); font-size: 1.1rem; cursor: pointer;
+    padding: 8px 12px; border-radius: 100px; line-height: 1;
+    transition: color .3s, transform .35s, background .3s;
+    backdrop-filter: blur(8px);
 }
-#close-lightbox:hover { color: var(--silver); transform: rotate(90deg); }
+#close-lightbox:hover {
+    color: var(--silver); transform: rotate(90deg) scale(1.1);
+    background: rgba(200,220,248,.08);
+}
 
 /* ═══ HEADER ════════════════════════════════════════════ */
 header { width: 100%; padding: 6rem 1.5rem 3rem; text-align: center; position: relative; z-index: 10; }
@@ -271,11 +312,12 @@ header { width: 100%; padding: 6rem 1.5rem 3rem; text-align: center; position: r
     animation: phaseFloat 5s ease-in-out infinite;
     animation-delay: calc(var(--i) * 0.2s);
     transition: opacity .3s, transform .35s var(--ease-spring); cursor: default;
+    will-change: transform;
 }
 .phase:hover { opacity: 1; transform: scale(1.4) translateY(-4px); }
 @keyframes phaseFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 
-.header-title { animation: titleFloat 7s ease-in-out infinite; }
+.header-title { animation: titleFloat 7s ease-in-out infinite; will-change: transform; }
 @keyframes titleFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 header h1 {
     font-family: var(--font-head);
@@ -349,6 +391,7 @@ h2::after {
     color: var(--gold); font-size: 12px; opacity: .4;
     animation: bstarTwinkle 3s ease-in-out infinite;
     animation-delay: var(--d);
+    will-change: opacity, transform;
 }
 @keyframes bstarTwinkle { 0%,100%{opacity:.25;transform:scale(1)} 50%{opacity:.75;transform:scale(1.4)} }
 
@@ -357,6 +400,7 @@ h2::after {
     font-size: 3.2rem; display: block; margin: 0 auto .8rem;
     filter: drop-shadow(0 0 16px rgba(232,201,106,.4));
     animation: cakeWiggle 3s ease-in-out infinite;
+    will-change: transform;
 }
 @keyframes cakeWiggle {
     0%,100% { transform: rotate(-3deg) scale(1); }
@@ -387,6 +431,7 @@ h2::after {
     text-shadow: 0 0 30px rgba(232,201,106,.45), 0 0 60px rgba(232,201,106,.2);
     transition: transform .15s var(--ease-spring);
     min-width: 2ch; text-align: center;
+    will-change: transform;
 }
 .cd-number.bump { animation: numBump .2s var(--ease-spring); }
 @keyframes numBump { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
@@ -437,7 +482,7 @@ h2::after {
 
 /* ═══ PROGRESS + BLOOM CONTROLS ════════════════════════ */
 .progress-track { width: 200px; height: 6px; background: rgba(255,255,255,.05); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,.04); }
-.progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3a5fcd, var(--gold)); border-radius: 10px; transition: width .7s var(--ease-out); position: relative; }
+.progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3a5fcd, var(--gold)); border-radius: 10px; transition: width .7s var(--ease-out); position: relative; will-change: width; }
 .progress-bar::after { content:''; position:absolute; right:0; top:50%; width:10px; height:10px; transform:translate(50%,-50%); background:var(--gold); border-radius:50%; box-shadow:0 0 8px var(--gold), 0 0 18px rgba(232,201,106,.5); opacity:0; transition:opacity .4s; }
 .progress-bar.active::after { opacity: 1; }
 .level-text { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; }
@@ -489,6 +534,7 @@ h2::after {
     opacity: 0; transform: translateX(-16px);
     transition: padding-left .35s var(--ease-out), color .3s,
                 opacity .55s var(--ease-out), transform .55s var(--ease-out);
+    will-change: opacity, transform;
 }
 .list-item.visible { opacity: 1; transform: translateX(0); }
 .list-item:last-child { border-bottom: none; }
@@ -505,20 +551,39 @@ h2::after {
 
 .gallery-item {
     position: relative; aspect-ratio: 1; border-radius: 13px;
-    overflow: hidden; border: 1px solid rgba(200,220,248,.07); cursor: pointer; margin: 0;
+    overflow: hidden; border: 1px solid rgba(200,220,248,.07);
+    cursor: zoom-in;   /* better UX hint that it zooms */
+    margin: 0;
     transition: transform .55s var(--ease-out), box-shadow .55s, border-color .4s;
+    will-change: transform;
 }
 .gallery-item::before {
     content: ''; position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(180deg, transparent 45%, rgba(1,5,18,.72) 100%);
+    pointer-events: none;
 }
+/* Zoom icon overlay */
+.gallery-item::after {
+    content: '⤢'; position: absolute; top: 10px; right: 12px; z-index: 2;
+    font-size: 16px; color: rgba(200,220,248,.55);
+    opacity: 0; transform: scale(0.7);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+}
+.gallery-item:hover::after { opacity: 1; transform: scale(1); }
+
 .gallery-item figcaption {
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
     padding: .55rem .75rem; font-size: 11px; letter-spacing: .14em;
     text-transform: uppercase; color: rgba(200,220,248,.42);
     transform: translateY(5px); transition: color .4s, transform .4s;
 }
-.gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .7s var(--ease-out); }
+.gallery-item img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .7s var(--ease-out);
+    /* Ensure images load with correct aspect */
+    image-rendering: auto;
+}
 .gallery-item:hover { transform: translateY(-8px) scale(1.03); border-color: rgba(200,220,248,.2); box-shadow: 0 20px 50px rgba(0,0,15,.7), 0 0 30px rgba(100,160,255,.08); }
 .gallery-item:hover img { transform: scale(1.08); }
 .gallery-item:hover figcaption { color: var(--silver); transform: translateY(0); }
@@ -543,6 +608,7 @@ h2::after {
 .click-spark {
     position: fixed; pointer-events: none; z-index: 9998; line-height: 1;
     animation: sparkBurst .9s var(--ease-out) forwards;
+    will-change: transform, opacity;
 }
 @keyframes sparkBurst { 0%{opacity:1;transform:scale(.6)translate(0,0)rotate(0deg)} 100%{opacity:0;transform:scale(1.3)translate(var(--tx),var(--ty))rotate(var(--rot))} }
 
@@ -553,7 +619,7 @@ footer {
     color: var(--text-muted); display: flex; align-items: center; gap: .8rem; font-weight: 400;
 }
 .footer-moon { display: inline-block; }
-.beating-heart { animation: heartBeat 2.2s ease-in-out infinite; }
+.beating-heart { animation: heartBeat 2.2s ease-in-out infinite; will-change: transform; }
 @keyframes heartBeat { 0%,100%{transform:scale(1)} 40%{transform:scale(1.3)rotate(8deg)} 60%{transform:scale(1.15)rotate(-4deg)} }
 .footer-star { color: var(--gold); opacity: .4; font-size: 10px; }
 
@@ -568,4 +634,13 @@ footer {
     #music-label { display: none; }
     .countdown-block { min-width: 56px; }
     .bday-title { font-size: 1.3rem; }
+}
+
+/* ═══ REDUCE MOTION ══════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
