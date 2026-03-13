@@ -1,201 +1,240 @@
-// --- 1. Custom Cursor ---
+// ─── 1. Star Field Canvas ───────────────────────────────────────────
+const canvas = document.getElementById('star-canvas');
+const ctx = canvas.getContext('2d');
+let stars = [], shootingStars = [], W, H;
+
+function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); initStars(); });
+
+function initStars() {
+    stars = Array.from({ length: 220 }, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.2,
+        alpha: Math.random() * 0.8 + 0.1,
+        speed: Math.random() * 0.004 + 0.001,
+        phase: Math.random() * Math.PI * 2
+    }));
+}
+initStars();
+
+function spawnShootingStar() {
+    const angle = (Math.random() * 20 + 20) * Math.PI / 180;
+    const x = Math.random() * W * 0.7;
+    const y = Math.random() * H * 0.4;
+    shootingStars.push({ x, y, vx: Math.cos(angle) * 14, vy: Math.sin(angle) * 14, life: 1, len: Math.random() * 120 + 60 });
+}
+
+function drawFrame(t) {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+        const tw = 0.5 + 0.5 * Math.sin(t * s.speed * 1000 + s.phase);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(232, 240, 255, ${s.alpha * (0.4 + 0.6 * tw)})`;
+        ctx.fill();
+    });
+    shootingStars.forEach((ss, i) => {
+        ctx.beginPath();
+        ctx.moveTo(ss.x, ss.y);
+        ctx.lineTo(ss.x - ss.vx * (ss.len / 14), ss.y - ss.vy * (ss.len / 14));
+        const grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.vx * 8, ss.y - ss.vy * 8);
+        grad.addColorStop(0, `rgba(255,255,255,${ss.life})`);
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ss.x += ss.vx; ss.y += ss.vy; ss.life -= 0.025;
+        if (ss.life <= 0) shootingStars.splice(i, 1);
+    });
+    requestAnimationFrame(drawFrame);
+}
+requestAnimationFrame(drawFrame);
+setInterval(() => { if (Math.random() < 0.35) spawnShootingStar(); }, 3000);
+
+// ─── 2. Custom Cursor ───────────────────────────────────────────────
 const cursor = document.querySelector('.custom-cursor');
-document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-});
-const clickables = document.querySelectorAll('button, .gallery-item img, #close-lightbox');
-clickables.forEach(el => {
+let mx = 0, my = 0, cx = 0, cy = 0;
+document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
+(function animateCursor() {
+    cx += (mx - cx) * 0.12; cy += (my - cy) * 0.12;
+    cursor.style.left = cx + 'px'; cursor.style.top = cy + 'px';
+    requestAnimationFrame(animateCursor);
+})();
+document.querySelectorAll('button, .gallery-item img, #close-lightbox').forEach(el => {
     el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
     el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
 });
 
-// --- 2. Scroll Progress Bar ---
+// ─── 3. Scroll Progress ─────────────────────────────────────────────
 window.addEventListener('scroll', () => {
-    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const scrolled = (winScroll / height) * 100;
-    document.getElementById("scroll-progress").style.width = scrolled + "%";
+    const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('scroll-progress').style.width = ((document.documentElement.scrollTop / h) * 100) + '%';
 });
 
-// --- 3. Audio & Entrance ---
+// ─── 4. Audio & Entrance ────────────────────────────────────────────
 const welcomeScreen = document.getElementById('welcome-screen');
-const enterBtn = document.getElementById('enter-btn');
-const bgMusic = document.getElementById('bg-music');
-const musicBtn = document.getElementById('music-btn');
+const enterBtn      = document.getElementById('enter-btn');
+const bgMusic       = document.getElementById('bg-music');
+const musicBtn      = document.getElementById('music-btn');
 let isPlaying = false;
 
-function fadeAudio(audio, targetVolume, duration) {
-    const steps = 20;
-    const stepTime = duration / steps;
-    const volumeStep = (targetVolume - audio.volume) / steps;
-    let currentStep = 0;
-    const fadeInterval = setInterval(() => {
-        currentStep++;
-        let newVol = audio.volume + volumeStep;
-        audio.volume = Math.max(0, Math.min(1, newVol));
-        if (currentStep >= steps) {
-            clearInterval(fadeInterval);
-            if(targetVolume === 0) audio.pause();
-        }
-    }, stepTime);
+function fadeAudio(audio, target, dur) {
+    const steps = 20, stepT = dur / steps, volStep = (target - audio.volume) / steps;
+    let n = 0;
+    const iv = setInterval(() => {
+        n++; audio.volume = Math.max(0, Math.min(1, audio.volume + volStep));
+        if (n >= steps) { clearInterval(iv); if (target === 0) audio.pause(); }
+    }, stepT);
 }
 
 enterBtn.addEventListener('click', () => {
     welcomeScreen.classList.add('hidden-screen');
     bgMusic.volume = 0;
-    bgMusic.play().then(() => fadeAudio(bgMusic, 0.6, 2000)).catch(e => console.log("Blocked"));
-    isPlaying = true;
-    musicBtn.textContent = "⏸️ Pause Song";
+    bgMusic.play().then(() => fadeAudio(bgMusic, 0.55, 2500)).catch(() => {});
+    isPlaying = true; musicBtn.textContent = '⏸️ Pause Song';
 });
-
 musicBtn.addEventListener('click', () => {
-    if (isPlaying) { fadeAudio(bgMusic, 0, 1000); musicBtn.textContent = "🎵 Play Our Song"; } 
-    else { bgMusic.play(); fadeAudio(bgMusic, 0.6, 1000); musicBtn.textContent = "⏸️ Pause Song"; }
+    if (isPlaying) { fadeAudio(bgMusic, 0, 1000); musicBtn.textContent = '🎵 Our Song'; }
+    else { bgMusic.play(); fadeAudio(bgMusic, 0.55, 1000); musicBtn.textContent = '⏸️ Pause Song'; }
     isPlaying = !isPlaying;
 });
 
-// --- 4. Growth Garden & Compliments ---
+// ─── 5. Moon Bloom Garden ───────────────────────────────────────────
 let waterCount = 0;
 const maxWater = 10;
 const compliments = [
-    "You have the most beautiful smile.", "I love how passionate you are.", "Your sense of humor is my favorite.",
-    "I always feel safe and happy with you.", "You are the best teammate.", "You make my whole day better.", "You are my favorite flower, Tofu."
+    "You are the moon — beautiful even in your darkest phases.",
+    "Your presence brightens every room you enter.",
+    "I love how passionately you care about everything.",
+    "Your sense of humor is my absolute favourite thing.",
+    "You make me feel safe, even in the quiet.",
+    "You are my favourite person in every universe.",
+    "Gravity works differently when you're around — I always pull toward you.",
 ];
-const flowerEmoji = document.getElementById('flower-stage');
+const flowerStages = ['🌱','🌿','🎍','🪴','🎋','🍃','🌸','🌷','🌹','🌕'];
+
+const flowerEl  = document.getElementById('flower-stage');
 const waterFill = document.getElementById('water-fill');
 const waterText = document.getElementById('water-count-text');
 const secretMsg = document.getElementById('secret-message');
-const complimentBtn = document.getElementById('compliment-btn');
-const textDisplay = document.getElementById('compliment-text');
-const flowerStages = ['🌱', '🌿', '🎍', '🪴', '🎋', '🍃', '🌸', '🌷', '🌹', '💐'];
+const complBtn  = document.getElementById('compliment-btn');
+const textDisp  = document.getElementById('compliment-text');
 
-complimentBtn.addEventListener('click', () => {
-    textDisplay.style.opacity = 0;
+complBtn.addEventListener('click', () => {
+    textDisp.style.opacity = 0;
     setTimeout(() => {
-        textDisplay.textContent = compliments[Math.floor(Math.random() * compliments.length)];
-        textDisplay.style.opacity = 1;
-    }, 400);
-
+        textDisp.textContent = compliments[Math.floor(Math.random() * compliments.length)];
+        textDisp.style.opacity = 1;
+    }, 350);
     if (waterCount < maxWater) {
         waterCount++;
-        waterFill.style.width = (waterCount / maxWater) * 100 + "%";
-        waterText.textContent = `Watering Level: ${waterCount}/10`;
-        flowerEmoji.textContent = flowerStages[waterCount - 1];
-        flowerEmoji.classList.remove('flower-bounce');
-        void flowerEmoji.offsetWidth;
-        flowerEmoji.classList.add('flower-bounce');
+        waterFill.style.width = (waterCount / maxWater * 100) + '%';
+        waterText.textContent = `Moonlight Level: ${waterCount} / 10`;
+        flowerEl.textContent = flowerStages[waterCount - 1];
+        flowerEl.classList.remove('flower-bounce');
+        void flowerEl.offsetWidth;
+        flowerEl.classList.add('flower-bounce');
         if (waterCount === maxWater) {
-            flowerEmoji.style.transform = "scale(1.5)";
+            flowerEl.style.filter = 'drop-shadow(0 0 30px rgba(240,208,128,0.9))';
+            flowerEl.style.fontSize = '4.5rem';
             secretMsg.classList.add('show-message');
-            waterText.textContent = "Fully Bloomed! ✨";
+            waterText.textContent = 'Fully Bloomed ✦ Full Moon 🌕';
+            spawnShootingStar(); spawnShootingStar(); spawnShootingStar();
         }
     }
 });
 
-// --- 5. Lightbox ---
-const lightbox = document.getElementById('lightbox');
+// ─── 6. Lightbox ────────────────────────────────────────────────────
+const lightbox    = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
-const images = document.querySelectorAll('.enlargeable');
-images.forEach(img => {
+
+document.querySelectorAll('.enlargeable').forEach(img => {
     img.addEventListener('click', () => {
         lightboxImg.src = img.src;
         lightbox.classList.remove('hidden-screen');
-        lightbox.classList.add('active-lightbox');
+        requestAnimationFrame(() => lightbox.classList.add('active-lightbox'));
     });
 });
 lightbox.addEventListener('click', () => {
-    lightbox.classList.add('hidden-screen');
     lightbox.classList.remove('active-lightbox');
+    setTimeout(() => lightbox.classList.add('hidden-screen'), 500);
 });
 
-// --- 6. 3D Tilt ---
-const tiltCards = document.querySelectorAll('.tilt-card');
-tiltCards.forEach(card => {
+// ─── 7. 3D Tilt ─────────────────────────────────────────────────────
+document.querySelectorAll('.tilt-card').forEach(card => {
     card.addEventListener('mousemove', (e) => {
-        if(window.innerWidth > 768) {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left; const y = e.clientY - rect.top;
-            const centerX = rect.width / 2; const centerY = rect.height / 2;
-            const rotateX = ((y - centerY) / centerY) * -3; 
-            const rotateY = ((x - centerX) / centerX) * 3;
-            card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
-        }
+        if (window.innerWidth <= 768) return;
+        const r = card.getBoundingClientRect();
+        const rx = ((e.clientY - r.top  - r.height/2) / (r.height/2)) * -4;
+        const ry = ((e.clientX - r.left - r.width/2)  / (r.width/2))  *  4;
+        card.style.transform = `perspective(1400px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
     });
     card.addEventListener('mouseleave', () => {
-        card.style.transform = `perspective(1200px) rotateX(0) rotateY(0) translateY(0)`;
+        card.style.transform = 'perspective(1400px) rotateX(0) rotateY(0) translateY(0)';
     });
 });
 
-// --- 7. Typewriter ---
+// ─── 8. Typewriter ──────────────────────────────────────────────────
 const letterParagraphs = [
-    { id: 'typewriter-text1', text: "Dear Tofu," },
-    { id: 'typewriter-text2', text: "I wanted to make this because I want you to know how much I truly value you. I know I’m still learning how to be the partner you deserve, but my goal is always to take care of your heart." },
-    { id: 'typewriter-text3', text: "Thank you for being my flower and for letting me be the one who gets to water it." },
-    { id: 'signature-text', text: "- Yours ❤️" }
+    { id: 'typewriter-text1', text: 'Dear Moon,' },
+    { id: 'typewriter-text2', text: 'I made this because I want you to know how much light you bring into my life. You are the kind of person I find myself wanting to tell every good thing to — and some of the bad things too, because you make those feel smaller.' },
+    { id: 'typewriter-text3', text: 'Thank you for being my moon — constant, beautiful, and worth every sleepless night spent looking up at you.' },
+    { id: 'signature-text',   text: '— Yours ❤️' }
 ];
 let isTyping = false;
+
 function typeWriter() {
-    if(isTyping) return;
-    isTyping = true;
-    let currentP = 0, charIndex = 0;
-    function typeNextChar() {
-        if (currentP < letterParagraphs.length) {
-            const pConfig = letterParagraphs[currentP];
-            const element = document.getElementById(pConfig.id);
-            element.classList.add('typing-cursor');
-            if (charIndex < pConfig.text.length) {
-                element.textContent += pConfig.text.charAt(charIndex);
-                charIndex++;
-                setTimeout(typeNextChar, 35);
-            } else {
-                element.classList.remove('typing-cursor');
-                currentP++; charIndex = 0;
-                setTimeout(typeNextChar, 500);
-            }
+    if (isTyping) return; isTyping = true;
+    let p = 0, c = 0;
+    function next() {
+        if (p >= letterParagraphs.length) return;
+        const { id, text } = letterParagraphs[p];
+        const el = document.getElementById(id);
+        el.classList.add('typing-cursor');
+        if (c < text.length) {
+            el.textContent += text[c++];
+            setTimeout(next, 34);
+        } else {
+            el.classList.remove('typing-cursor');
+            p++; c = 0; setTimeout(next, 480);
         }
     }
-    typeNextChar();
+    next();
 }
 
-// --- 8. Observer & Petals & Heart Bursts ---
+// ─── 9. Intersection Observer ───────────────────────────────────────
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-            entry.target.style.opacity = "1";
-            if (entry.target.classList.contains('letter-wrapper')) setTimeout(typeWriter, 500);
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+            if (entry.target.classList.contains('letter-wrapper')) setTimeout(typeWriter, 600);
         }
     });
-}, { threshold: 0.15 }); 
-tiltCards.forEach(card => observer.observe(card));
+}, { threshold: 0.12 });
+document.querySelectorAll('.tilt-card').forEach(c => observer.observe(c));
 
-function createPetal() {
-    if (document.hidden) return; 
-    const container = document.getElementById('petals-container');
-    const petal = document.createElement('div');
-    petal.classList.add('petal');
-    petal.style.left = Math.random() * 100 + 'vw';
-    const size = Math.random() * 14 + 10;
-    petal.style.width = size + 'px'; petal.style.height = size + 'px';
-    const fallDuration = Math.random() * 4 + 7; 
-    petal.style.animationDuration = `${fallDuration}s, ${Math.random() * 2 + 3}s`; 
-    container.appendChild(petal);
-    setTimeout(() => petal.remove(), fallDuration * 1000);
-}
-setInterval(createPetal, 400);
-
-document.addEventListener('click', function(e) {
-    if(['BUTTON', 'IMG'].includes(e.target.tagName)) return;
-    for(let i=0; i<5; i++) {
-        const heart = document.createElement('div');
-        heart.innerHTML = '❤️'; heart.classList.add('click-heart');
+// ─── 10. Click Hearts / Stars ───────────────────────────────────────
+document.addEventListener('click', (e) => {
+    if (['BUTTON','IMG'].includes(e.target.tagName)) return;
+    const symbols = ['✦','🌙','✶','⋆','☽'];
+    for (let i = 0; i < 6; i++) {
+        const h = document.createElement('div');
+        h.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+        h.classList.add('click-heart');
+        h.style.color = i % 2 === 0 ? '#f0d080' : '#c8d8f0';
+        h.style.fontSize = (0.9 + Math.random() * 0.8) + 'rem';
         const angle = Math.random() * Math.PI * 2;
-        const velocity = 30 + Math.random() * 40;
-        heart.style.setProperty('--tx', Math.cos(angle) * velocity + 'px');
-        heart.style.setProperty('--ty', Math.sin(angle) * velocity - 20 + 'px');
-        heart.style.setProperty('--rot', (Math.random() * 90 - 45) + 'deg');
-        heart.style.left = `${e.clientX - 10}px`; heart.style.top = `${e.clientY - 10}px`;
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 1000);
+        const v = 30 + Math.random() * 50;
+        h.style.setProperty('--tx', Math.cos(angle) * v + 'px');
+        h.style.setProperty('--ty', Math.sin(angle) * v - 25 + 'px');
+        h.style.setProperty('--rot', (Math.random() * 80 - 40) + 'deg');
+        h.style.left = e.clientX + 'px'; h.style.top = e.clientY + 'px';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 1000);
     }
 });

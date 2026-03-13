@@ -3,86 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watering My Favorite Flower</title>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <title>For My Moon 🌙</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300;1,500&family=DM+Sans:wght@300;400;500&family=Pinyon+Script&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
 <body>
 
     <div id="scroll-progress"></div>
-
-    <div class="custom-cursor"></div>
+    <div class="custom-cursor"><div class="cursor-dot"></div></div>
+    <canvas id="star-canvas"></canvas>
 
     <div id="lightbox" class="hidden-screen">
-        <span id="close-lightbox">✖</span>
+        <span id="close-lightbox">✕</span>
         <img id="lightbox-img" src="" alt="Memory">
     </div>
 
     <div id="welcome-screen">
+        <div class="moon-glow-bg"></div>
         <div class="welcome-content">
-            <h1 class="reveal-text" style="animation-delay: 0.2s;">For Tofu 🌸</h1>
-            <p class="reveal-text" style="animation-delay: 0.6s;">Are you ready?</p>
-            <button id="enter-btn" class="reveal-text" style="animation-delay: 1s;">Open My Heart</button>
+            <div class="crescent-icon reveal-text" style="animation-delay: 0s;">🌙</div>
+            <h1 class="reveal-text" style="animation-delay: 0.3s;">For Moon</h1>
+            <p class="reveal-text" style="animation-delay: 0.7s;">A little universe made just for you.</p>
+            <button id="enter-btn" class="reveal-text" style="animation-delay: 1.1s;">
+                <span class="btn-glow"></span>
+                Enter My World
+            </button>
         </div>
     </div>
-
-    <div id="petals-container"></div>
 
     <audio id="bg-music" loop>
         <source src="our-song.mp3" type="audio/mpeg">
     </audio>
-    <button id="music-btn" class="floating-music-btn">🎵 Play Our Song</button>
+    <button id="music-btn" class="floating-music-btn">🎵 Our Song</button>
 
     <header>
+        <div class="moon-phase-row" id="moon-phases">
+            <span>🌑</span><span>🌒</span><span>🌓</span><span>🌔</span><span>🌕</span><span>🌖</span><span>🌗</span><span>🌘</span>
+        </div>
         <div class="floating-title">
-            <h1>Why Tofu is the Best Flower 🌸</h1>
-            <p>A little space dedicated to my favorite person.</p>
+            <h1>Why Moon Lights Up My World 🌙</h1>
+            <p>A constellation of reasons I adore you.</p>
         </div>
     </header>
 
     <main class="container">
-        <section class="card interactive-section tilt-card">
-            <h2>Water the Flower</h2>
+
+        <section class="card tilt-card interactive-section" id="garden-card">
+            <div class="card-glow"></div>
+            <h2>Grow the Moon Bloom</h2>
             <div class="garden-container">
-                <div id="flower-stage" class="flower-emoji">🌱</div>
+                <div class="orbit-ring">
+                    <div id="flower-stage" class="flower-emoji">🌱</div>
+                </div>
                 <div class="water-progress-bar">
                     <div id="water-fill"></div>
+                    <div class="water-fill-glow"></div>
                 </div>
-                <p id="water-count-text">Watering Level: 0/10</p>
+                <p id="water-count-text">Moonlight Level: 0 / 10</p>
             </div>
-            
-            <p id="compliment-text">Click the button below to see her grow!</p>
-            <button id="compliment-btn" class="pulse-btn">Water the Flower 💧</button>
-
+            <p id="compliment-text">Shine your light on her to help her bloom.</p>
+            <button id="compliment-btn" class="pulse-btn">
+                <span>Moonbeam 🌙</span>
+            </button>
             <div id="secret-message" class="hidden-message">
-                <p>🌸 "You've bloomed! Just like this flower, my love for you grows every single day. You are the most beautiful part of my life." 🌸</p>
+                <p>🌕 "You've bloomed into the fullest moon — beautiful, luminous, and the thing I look for every single night." 🌕</p>
             </div>
         </section>
 
-        <section class="card tilt-card">
+        <section class="card tilt-card" id="reasons-card">
+            <div class="card-glow"></div>
             <h2>Why I Love You</h2>
             <ul class="stagger-list">
                 <li>The way you actually enjoy playing games like Roblox with me.</li>
                 <li>Your sense of humor that always catches me off guard.</li>
                 <li>How deeply you care about the things (and people) you love.</li>
-                <li>Our inside jokes—honestly, I'm still thinking about your take on Gojo's boots.</li>
+                <li>Our inside jokes — honestly, I'm still thinking about your take on Gojo's boots.</li>
                 <li>The way you make me feel like I can just be myself around you.</li>
             </ul>
         </section>
 
-        <section class="card tilt-card">
+        <section class="card tilt-card" id="gallery-card">
+            <div class="card-glow"></div>
             <h2>Our Core Memories</h2>
             <div class="gallery">
-                <div class="gallery-item"><img src="roblox.png" alt="Roblox Screen" class="enlargeable"></div>
-                <div class="gallery-item"><img src="discord.png" alt="Funny Chat" class="enlargeable"></div>
-                <div class="gallery-item"><img src="game.png" alt="Gaming together" class="enlargeable"></div>
+                <div class="gallery-item">
+                    <div class="gallery-shimmer"></div>
+                    <img src="roblox.png" alt="Roblox Screen" class="enlargeable">
+                </div>
+                <div class="gallery-item">
+                    <div class="gallery-shimmer"></div>
+                    <img src="discord.png" alt="Funny Chat" class="enlargeable">
+                </div>
+                <div class="gallery-item">
+                    <div class="gallery-shimmer"></div>
+                    <img src="game.png" alt="Gaming together" class="enlargeable">
+                </div>
             </div>
-            <p class="caption">(Click the pictures to enlarge them!)</p>
+            <p class="caption">✦ Click a photo to relive it ✦</p>
         </section>
 
-        <section class="card letter-wrapper tilt-card">
-            <h2>A Letter to My Tofu</h2>
+        <section class="card letter-wrapper tilt-card" id="letter-card">
+            <div class="card-glow"></div>
+            <h2>A Letter to My Moon</h2>
             <div class="letter-paper">
                 <p id="typewriter-text1"></p>
                 <p id="typewriter-text2"></p>
@@ -90,9 +113,12 @@
                 <p class="signature" id="signature-text"></p>
             </div>
         </section>
+
     </main>
 
-    <footer>Built with <span class="beating-heart">❤️</span> just for you.</footer>
+    <footer>
+        Crafted under moonlight <span class="beating-heart">🌙</span> just for you.
+    </footer>
 
 </body>
 </html>
