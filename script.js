@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   MOON — script.js
+   MOON — script.js  ✦  Updated Edition
 
    ┌─────────────────────────────────────────────────────────────┐
    │  ✦  EDIT THIS CONFIG BLOCK — everything else is automatic  │
@@ -7,75 +7,78 @@
 
    MUSIC
    ─────
-   Drop your MP3 files into the  music/  folder next to index.html,
-   then list them below.  They will shuffle and auto-advance.
+   Drop your MP3 files into the  music/  folder, list them below.
 
-       music/
-         our-song.mp3
-         another-song.mp3
-         late-nights.mp3
-
-   GALLERY  (the "Moments I Keep" section)
+   GALLERY  (optional starting photos)
    ────────
-   Drop images into  images/gallery/  and add an entry below.
-   You can add as many as you like — the grid expands automatically.
+   You can still list photos here — OR just drag and drop images
+   directly onto the gallery section in the browser. Both work,
+   and you can mix them. Drag many at once, no limit.
 
-       images/
-         gallery/
-           01.jpg
-           02.jpg
-           03.jpg
+   START DATE
+   ──────────
+   Set the date you started talking / became official.
+   Format: 'YYYY-MM-DD'
 
    ═══════════════════════════════════════════════════════════════ */
 
 const CONFIG = {
 
-    /* ── PLAYLIST ──────────────────────────────────────────────
-       Add as many songs as you want.
-       title  : shows in the player UI
-       src    : path to the file (relative to index.html)          */
+    /* ── WHEN YOU STARTED TALKING ──────────────────────────── */
+    startDate: '2024-06-01',   // ← change this to your real date
+
+    /* ── PLAYLIST ───────────────────────────────────────────── */
     playlist: [
         { title: 'Our Song',      src: 'music/our-song.mp3'    },
         { title: 'Another Song',  src: 'music/another-song.mp3' },
         { title: 'Late Nights',   src: 'music/late-nights.mp3'  },
     ],
 
-    /* ── GALLERY ───────────────────────────────────────────────
-       Add as many photos as you want.
-       src     : path to the image
-       caption : small text shown under the photo in the lightbox  */
+    /* ── GALLERY (optional — you can also just drag and drop) ─ */
     gallery: [
-        { src: 'images/gallery/roblox.png',   caption: 'our game nights'   },
-        { src: 'images/gallery/discord.png',  caption: 'that one message'  },
-        { src: 'images/gallery/game.png',     caption: 'us, as always'     },
-        // { src: 'images/gallery/04.jpg', caption: 'another memory' },
-        // { src: 'images/gallery/05.jpg', caption: 'this one too'   },
+        // { src: 'images/gallery/photo1.jpg', caption: 'our game nights' },
+        // { src: 'images/gallery/photo2.jpg', caption: 'that one message' },
     ],
 
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   DO NOT EDIT BELOW THIS LINE UNLESS YOU KNOW WHAT YOU'RE DOING
+   DO NOT EDIT BELOW THIS LINE
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
     'use strict';
 
-    const $ = (s, r = document) => r.querySelector(s);
-    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-    const rand  = (a, b) => Math.random() * (b - a) + a;
-    const randInt = (a, b) => Math.floor(rand(a, b + 1));
-    const lerp  = (a, b, t) => a + (b - a) * t;
+    const $   = (s, r = document) => r.querySelector(s);
+    const $$  = (s, r = document) => [...r.querySelectorAll(s)];
+    const clamp   = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const rand    = (a, b)       => Math.random() * (b - a) + a;
+    const randInt = (a, b)       => Math.floor(rand(a, b + 1));
+    const lerp    = (a, b, t)    => a + (b - a) * t;
 
-    /* ── SHUFFLE HELPER ─────────────────────────────────────── */
+    /* ── SHUFFLE ─────────────────────────────────────────────── */
     function shuffle(arr) {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
-            const j = randInt(0, i);
-            [a[i], a[j]] = [a[j], a[i]];
+            const j = randInt(0, i); [a[i], a[j]] = [a[j], a[i]];
         }
         return a;
+    }
+
+    /* ── AUTO-CAPTION from filename ─────────────────────────── */
+    function captionFromFilename(name) {
+        return name
+            .replace(/\.[^.]+$/, '')          // strip extension
+            .replace(/[-_]+/g, ' ')           // hyphens/underscores → space
+            .replace(/\b\w/g, c => c.toUpperCase()) // Title Case
+            .trim();
+    }
+
+    /* ── NUMBER FORMATTER ────────────────────────────────────── */
+    function fmtNum(n) {
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (n >= 1_000)     return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+        return String(n);
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -114,7 +117,10 @@ const CONFIG = {
         function tick() {
             const diff = getTarget() - new Date();
             if (diff <= 0) {
-                ['d','h','m','s'].forEach(k => { const el = document.getElementById('cd-'+k); if (el) el.textContent = '00'; });
+                ['d','h','m','s'].forEach(k => {
+                    const el = document.getElementById('cd-'+k);
+                    if (el) el.textContent = '00';
+                });
                 if (msgEl) msgEl.textContent = bdayLines[bdayIdx % bdayLines.length];
                 if (diff > -86400000) { spawnConfettiBurst(); bdayIdx++; }
                 return;
@@ -126,15 +132,72 @@ const CONFIG = {
             bump(mEl, Math.floor((t % 3600) / 60), 'm');
             bump(sEl, t % 60, 's');
             if (msgEl) {
-                msgEl.textContent = d===0 && Math.floor((t%86400)/3600)===0 ? "Any minute now. 🌙"
-                    : d===0  ? "It's today! Just a few hours left. 🎂"
-                    : d===1  ? "Tomorrow. I'm already excited for you."
-                    : d<=7   ? `Only ${d} more days. I can't wait.`
-                    : d<=30  ? `${d} days to go. It's coming up fast.`
-                              : "Counting down every single day. 🌕";
+                msgEl.textContent =
+                    d===0 && Math.floor((t%86400)/3600)===0 ? "Any minute now. 🌙"
+                  : d===0  ? "It's today! Just a few hours left. 🎂"
+                  : d===1  ? "Tomorrow. I'm already excited for you."
+                  : d<=7   ? `Only ${d} more days. I can't wait.`
+                  : d<=30  ? `${d} days to go. It's coming up fast.`
+                           : "Counting down every single day. 🌕";
             }
         }
         tick(); setInterval(tick, 1000);
+    })();
+
+    /* ═══════════════════════════════════════════════════════════
+       1b. TIME TOGETHER COUNTER
+       ═══════════════════════════════════════════════════════════ */
+    (function initTogether() {
+        const daysEl    = $('#tog-days');
+        const hoursEl   = $('#tog-hours');
+        const minsEl    = $('#tog-mins');
+        if (!daysEl) return;
+
+        const start = new Date(CONFIG.startDate || '2024-01-01');
+
+        function animateCount(el, target, duration = 1400) {
+            const startTime = performance.now();
+            function step(now) {
+                const t = Math.min((now - startTime) / duration, 1);
+                const ease = 1 - Math.pow(1 - t, 4);
+                const val = Math.floor(ease * target);
+                el.textContent = fmtNum(val);
+                if (t < 1) requestAnimationFrame(step);
+                else el.textContent = fmtNum(target);
+            }
+            requestAnimationFrame(step);
+        }
+
+        let animated = false;
+        function tick() {
+            const diff = new Date() - start;
+            const totalMins  = Math.floor(diff / 60000);
+            const totalHours = Math.floor(diff / 3600000);
+            const totalDays  = Math.floor(diff / 86400000);
+
+            if (!animated) {
+                animated = true;
+                animateCount(daysEl,  totalDays,  1200);
+                animateCount(hoursEl, totalHours, 1500);
+                animateCount(minsEl,  totalMins,  1800);
+            } else {
+                daysEl.textContent  = fmtNum(totalDays);
+                hoursEl.textContent = fmtNum(totalHours);
+                minsEl.textContent  = fmtNum(totalMins);
+            }
+        }
+
+        // Trigger animation when card is visible
+        const card = $('#together-card');
+        if (card) {
+            const obs = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting) { tick(); obs.disconnect(); }
+            }, { threshold: 0.2 });
+            obs.observe(card);
+        }
+        setInterval(() => {
+            if (animated) tick();
+        }, 60000);
     })();
 
     /* ═══════════════════════════════════════════════════════════
@@ -185,9 +248,9 @@ const CONFIG = {
                 const pulse = 1 + .07*Math.sin(b.t*1.3);
                 ctx.save(); ctx.translate(px, py); ctx.scale(1, ry/rx);
                 const g = ctx.createRadialGradient(0,0,0,0,0,rx*pulse);
-                g.addColorStop(0,   `rgba(${b.r},${b.g},${b.b},${b.a*1.55})`);
-                g.addColorStop(.5,  `rgba(${b.r},${b.g},${b.b},${b.a*.65})`);
-                g.addColorStop(1,   `rgba(${b.r},${b.g},${b.b},0)`);
+                g.addColorStop(0,  `rgba(${b.r},${b.g},${b.b},${b.a*1.55})`);
+                g.addColorStop(.5, `rgba(${b.r},${b.g},${b.b},${b.a*.65})`);
+                g.addColorStop(1,  `rgba(${b.r},${b.g},${b.b},0)`);
                 ctx.beginPath(); ctx.arc(0,0,rx*pulse,0,Math.PI*2);
                 ctx.fillStyle = g; ctx.fill(); ctx.restore();
             });
@@ -211,10 +274,10 @@ const CONFIG = {
         function resize() {
             W = canvas.width = window.innerWidth;
             H = canvas.height = window.innerHeight;
-            stars = Array.from({ length:300 }, (_,i) => ({
+            stars = Array.from({ length:320 }, (_,i) => ({
                 x:rand(0,W), y:rand(0,H),
-                r: i<SPECIALS ? rand(1.2,2.3) : rand(0.15,1.05),
-                base:rand(0.08,.7), speed:rand(.0006,.0035),
+                r: i<SPECIALS ? rand(1.2,2.4) : rand(0.15,1.1),
+                base:rand(0.08,.75), speed:rand(.0006,.0035),
                 phase:rand(0,Math.PI*2), special:i<SPECIALS,
             }));
         }
@@ -302,7 +365,7 @@ const CONFIG = {
     })();
 
     /* ═══════════════════════════════════════════════════════════
-       7. MUSIC PLAYER  (playlist, shuffle, prev/next)
+       7. MUSIC PLAYER
        ═══════════════════════════════════════════════════════════ */
     let audioCtx=null, analyser=null, dataArray=null, vizActive=false;
 
@@ -311,7 +374,7 @@ const CONFIG = {
         try {
             audioCtx = new (window.AudioContext||window.webkitAudioContext)();
             const src = audioCtx.createMediaElementSource(audioEl);
-            analyser = audioCtx.createAnalyser();
+            analyser  = audioCtx.createAnalyser();
             analyser.fftSize=256; analyser.smoothingTimeConstant=.84;
             src.connect(analyser); analyser.connect(audioCtx.destination);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
@@ -322,146 +385,80 @@ const CONFIG = {
     }
 
     (function initMusicPlayer() {
-        const music      = $('#bg-music');
-        const musicBtn   = $('#music-btn');
-        const musicIcon  = $('#music-icon');
-        const musicLbl   = $('#music-label');
-        const trackName  = $('#music-track-name');
-        const trackNum   = $('#music-track-num');
-        const btnPrev    = $('#btn-prev');
-        const btnNext    = $('#btn-next');
-        const btnShuffle = $('#btn-shuffle');
-        if (!music || !musicBtn) return;
+        const music     = $('#bg-music');
+        const musicBtn  = $('#music-btn');
+        const musicIcon = $('#music-icon');
+        const musicLbl  = $('#music-label');
+        const trackName = $('#music-track-name');
+        const trackNum  = $('#music-track-num');
+        const btnPrev   = $('#btn-prev');
+        const btnNext   = $('#btn-next');
+        const btnShuffle= $('#btn-shuffle');
+        if (!music||!musicBtn) return;
 
-        // Build play order
         const songs = CONFIG.playlist || [];
         if (!songs.length) return;
 
-        let order   = songs.map((_,i) => i);   // indices in play order
-        let cursor  = 0;                         // position in `order`
-        let playing = false;
-        let shuffled = false;
+        let order=songs.map((_,i)=>i), cursor=0, playing=false, shuffled=false;
 
         function buildOrder(fromIndex) {
-            if (shuffled) {
-                order = shuffle(songs.map((_,i) => i));
-            } else {
-                order = songs.map((_,i) => i);
-            }
-            // Try to keep current song at cursor
+            order = shuffled ? shuffle(songs.map((_,i)=>i)) : songs.map((_,i)=>i);
             if (fromIndex !== undefined) {
-                const pos = order.indexOf(fromIndex);
-                if (pos !== -1) cursor = pos;
-                else cursor = 0;
+                const pos=order.indexOf(fromIndex);
+                cursor = pos !== -1 ? pos : 0;
             }
         }
-
         function updateUI() {
-            const song = songs[order[cursor]];
-            if (trackName) trackName.textContent = song ? song.title : '–';
-            if (trackNum)  trackNum.textContent  = songs.length > 1 ? `${cursor+1} / ${songs.length}` : '';
-            if (btnShuffle) btnShuffle.classList.toggle('active', shuffled);
+            const song=songs[order[cursor]];
+            if (trackName) trackName.textContent=song?song.title:'–';
+            if (trackNum)  trackNum.textContent=songs.length>1?`${cursor+1} / ${songs.length}`:'';
+            if (btnShuffle) btnShuffle.classList.toggle('active',shuffled);
         }
-
-        function loadAndPlay(idx) {
-            cursor = idx;
-            const song = songs[order[cursor]];
-            if (!song) return;
-            music.src = song.src;
-            music.load();
-            music.volume = 0;
-            music.play().then(() => {
-                fade(music, 0.5, 1800);
-                playing = true;
-                musicIcon.textContent = '⏸️';
-                if (musicLbl) musicLbl.textContent = 'Pause';
-            }).catch(()=>{});
-            updateUI();
-        }
-
-        function fade(audio, to, ms) {
-            const steps=30, stepMs=ms/steps, delta=(to-audio.volume)/steps;
-            let n=0;
+        function fade(audio,to,ms) {
+            const steps=30,stepMs=ms/steps,delta=(to-audio.volume)/steps; let n=0;
             const iv=setInterval(()=>{
                 audio.volume=clamp(audio.volume+delta,0,1);
                 if (++n>=steps){ clearInterval(iv); if(to===0) audio.pause(); }
-            }, stepMs);
+            },stepMs);
         }
-
-        // Auto-advance
-        music.addEventListener('ended', () => {
-            cursor = (cursor + 1) % order.length;
-            // If we've gone through all, re-shuffle if needed
-            if (cursor === 0 && shuffled) buildOrder();
-            loadAndPlay(cursor);
-        });
-
-        // Play/Pause button
-        musicBtn.addEventListener('click', () => {
-            setupAudio(music);
-            if (playing) {
-                fade(music, 0, 1200);
-                musicIcon.textContent='🎵';
-                if (musicLbl) musicLbl.textContent='Our Song';
-            } else {
-                if (!music.src || music.src === location.href) {
-                    buildOrder();
-                    loadAndPlay(0);
-                    return;
-                }
-                music.play().catch(()=>{});
-                fade(music, 0.5, 1200);
-                musicIcon.textContent='⏸️';
-                if (musicLbl) musicLbl.textContent='Pause';
-            }
-            playing = !playing;
-        });
-
-        // Prev
-        if (btnPrev) btnPrev.addEventListener('click', () => {
-            setupAudio(music);
-            cursor = (cursor - 1 + order.length) % order.length;
-            loadAndPlay(cursor);
-        });
-
-        // Next
-        if (btnNext) btnNext.addEventListener('click', () => {
-            setupAudio(music);
-            cursor = (cursor + 1) % order.length;
-            loadAndPlay(cursor);
-        });
-
-        // Shuffle toggle
-        if (btnShuffle) btnShuffle.addEventListener('click', () => {
-            shuffled = !shuffled;
-            const currentSongIdx = order[cursor];
-            buildOrder(currentSongIdx);
+        function loadAndPlay(idx) {
+            cursor=idx; const song=songs[order[cursor]]; if (!song) return;
+            music.src=song.src; music.load(); music.volume=0;
+            music.play().then(()=>{ fade(music,0.5,1800); playing=true; musicIcon.textContent='⏸️'; if(musicLbl) musicLbl.textContent='Pause'; }).catch(()=>{});
             updateUI();
+        }
+        music.addEventListener('ended',()=>{
+            cursor=(cursor+1)%order.length;
+            if (cursor===0&&shuffled) buildOrder();
+            loadAndPlay(cursor);
         });
-
-        // Initial state
-        buildOrder();
-        updateUI();
-        // Don't autoplay; wait for user to press Enter on welcome screen
-        // We expose a function for the welcome screen to call
-        window._startMusic = () => {
+        musicBtn.addEventListener('click',()=>{
             setupAudio(music);
-            loadAndPlay(shuffled ? randInt(0, order.length-1) : 0);
-        };
+            if (playing) { fade(music,0,1200); musicIcon.textContent='🎵'; if(musicLbl) musicLbl.textContent='Our Song'; }
+            else {
+                if (!music.src||music.src===location.href) { buildOrder(); loadAndPlay(0); return; }
+                music.play().catch(()=>{}); fade(music,0.5,1200); musicIcon.textContent='⏸️'; if(musicLbl) musicLbl.textContent='Pause';
+            }
+            playing=!playing;
+        });
+        if (btnPrev) btnPrev.addEventListener('click',()=>{ setupAudio(music); cursor=(cursor-1+order.length)%order.length; loadAndPlay(cursor); });
+        if (btnNext) btnNext.addEventListener('click',()=>{ setupAudio(music); cursor=(cursor+1)%order.length; loadAndPlay(cursor); });
+        if (btnShuffle) btnShuffle.addEventListener('click',()=>{
+            shuffled=!shuffled; const cur=order[cursor]; buildOrder(cur); updateUI();
+        });
+        buildOrder(); updateUI();
+        window._startMusic = () => { setupAudio(music); loadAndPlay(shuffled?randInt(0,order.length-1):0); };
     })();
 
-    /* ═══════════════════════════════════════════════════════════
-       7b. VISUALIZERS
-       ═══════════════════════════════════════════════════════════ */
+    /* ─── RING VISUALIZER ────────────────────────────────────── */
     (function initRingViz() {
-        const rc = $('#music-ring-canvas'); if (!rc) return;
-        const ctx = rc.getContext('2d');
-        const S=110; rc.width=rc.height=S;
+        const rc=$('#music-ring-canvas'); if (!rc) return;
+        const ctx=rc.getContext('2d'); const S=110; rc.width=rc.height=S;
         (function draw() {
             requestAnimationFrame(draw); ctx.clearRect(0,0,S,S);
             if (!vizActive||!analyser) return;
             analyser.getByteFrequencyData(dataArray);
-            const cx=S/2, cy=S/2, base=34, barMax=22, total=48;
+            const cx=S/2,cy=S/2,base=34,barMax=22,total=48;
             for (let i=0;i<total;i++) {
                 const val=dataArray[Math.floor(i/total*dataArray.length*.55)]/255;
                 const barH=val*barMax+1.5, angle=i/total*Math.PI*2-Math.PI/2;
@@ -477,11 +474,12 @@ const CONFIG = {
         })();
     })();
 
+    /* ─── HORIZON VISUALIZER ─────────────────────────────────── */
     (function initHorizonViz() {
         const canvas=$('#viz-canvas'); if (!canvas) return;
         const ctx=canvas.getContext('2d');
         let W=window.innerWidth; canvas.width=W; canvas.height=90;
-        window.addEventListener('resize',()=>{ W=window.innerWidth; canvas.width=W; }, { passive:true });
+        window.addEventListener('resize',()=>{ W=window.innerWidth; canvas.width=W; },{ passive:true });
         let smooth=[];
         (function draw() {
             requestAnimationFrame(draw); ctx.clearRect(0,0,W,90);
@@ -492,7 +490,7 @@ const CONFIG = {
             for (let i=0;i<bars;i++) {
                 const raw=dataArray[Math.floor(i/bars*usable)]/255;
                 smooth[i]=lerp(smooth[i],raw,0.12);
-                const h=smooth[i]*76+1, x=i*barW, y=90-h;
+                const h=smooth[i]*76+1,x=i*barW,y=90-h;
                 const g=ctx.createLinearGradient(x,90,x,y);
                 g.addColorStop(0,`rgba(232,201,106,${.16+smooth[i]*.36})`);
                 g.addColorStop(.6,`rgba(196,216,245,${.12+smooth[i]*.38})`);
@@ -510,16 +508,19 @@ const CONFIG = {
        ═══════════════════════════════════════════════════════════ */
     (function initCursor() {
         const cursor=$('.custom-cursor'); if (!cursor) return;
-        let mx=-200, my=-200, cx=-200, cy=-200;
+        let mx=-200,my=-200,cx=-200,cy=-200;
         document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; },{ passive:true });
         (function loop() {
-            cx=lerp(cx,mx,.1); cy=lerp(cy,my,.1);
+            cx=lerp(cx,mx,.12); cy=lerp(cy,my,.12);
             cursor.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;
             requestAnimationFrame(loop);
         })();
-        $$('button,.gallery-item,#close-lightbox,.phase,.list-item,a').forEach(el=>{
-            el.addEventListener('mouseenter',()=>cursor.classList.add('hovering'));
-            el.addEventListener('mouseleave',()=>cursor.classList.remove('hovering'));
+        const hoverEls='button,.gallery-item,#close-lightbox,.phase,.list-item,a,.drop-zone,.lb-thumb';
+        document.addEventListener('mouseover',e=>{
+            if (e.target.closest(hoverEls)) cursor.classList.add('hovering');
+        });
+        document.addEventListener('mouseout',e=>{
+            if (e.target.closest(hoverEls)) cursor.classList.remove('hovering');
         });
         document.addEventListener('mouseleave',()=>{ cursor.style.opacity='0'; });
         document.addEventListener('mouseenter',()=>{ cursor.style.opacity='1'; });
@@ -531,7 +532,7 @@ const CONFIG = {
     (function() {
         const bar=$('#scroll-progress');
         window.addEventListener('scroll',()=>{
-            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+            const { scrollTop,scrollHeight,clientHeight }=document.documentElement;
             bar.style.width=clamp(scrollHeight<=clientHeight?100:scrollTop/(scrollHeight-clientHeight)*100,0,100)+'%';
         },{ passive:true });
     })();
@@ -550,11 +551,11 @@ const CONFIG = {
     })();
 
     /* ═══════════════════════════════════════════════════════════
-       11. CARD REVEAL
+       11. CARD REVEAL (with stagger)
        ═══════════════════════════════════════════════════════════ */
     (function initReveal() {
         function revealList(card) {
-            $$('.list-item',card).forEach((item,i)=>{ setTimeout(()=>item.classList.add('visible'),i*140+220); });
+            $$('.list-item',card).forEach((item,i)=>{ setTimeout(()=>item.classList.add('visible'),i*150+260); });
         }
         const allCards=$$('.tilt-card');
         const obs=new IntersectionObserver(entries=>{
@@ -565,7 +566,7 @@ const CONFIG = {
                     entry.target.classList.add('visible');
                     if (entry.target.id==='love-card')   revealList(entry.target);
                     if (entry.target.id==='letter-card') setTimeout(startTypewriter,900);
-                }, 60+idx*40);
+                },60+idx*40);
                 obs.unobserve(entry.target);
             });
         },{ threshold:0.06, rootMargin:'0px 0px -30px 0px' });
@@ -573,12 +574,12 @@ const CONFIG = {
     })();
 
     /* ═══════════════════════════════════════════════════════════
-       12. 3D TILT — smooth lerp
+       12. 3D TILT
        ═══════════════════════════════════════════════════════════ */
     (function initTilt() {
         if (window.matchMedia('(max-width: 768px)').matches) return;
         $$('.tilt-card').forEach(card=>{
-            let rx=0, ry=0, tx=0, ty=0, inside=false;
+            let rx=0,ry=0,tx=0,ty=0,inside=false;
             card.addEventListener('mouseenter',()=>{ inside=true; });
             card.addEventListener('mousemove',e=>{
                 const r=card.getBoundingClientRect();
@@ -597,105 +598,216 @@ const CONFIG = {
     })();
 
     /* ═══════════════════════════════════════════════════════════
-       13. DYNAMIC GALLERY  (from CONFIG.gallery)
+       13. GALLERY  —  drag-and-drop + file picker + CONFIG images
        ═══════════════════════════════════════════════════════════ */
+    const galleryImages = []; // unified list: { src, caption, isBlob }
+
     (function initGallery() {
-        const grid = $('#gallery-grid');
-        const hint = $('#gallery-hint');
-        const images = CONFIG.gallery || [];
-        if (!grid || !images.length) return;
+        const grid      = $('#gallery-grid');
+        const dropZone  = $('#drop-zone');
+        const fileInput = $('#file-input');
+        const hint      = $('#gallery-hint');
+        const meta      = $('#gallery-meta');
+        const countEl   = $('#gallery-count');
+        const clearBtn  = $('#gallery-clear');
+        if (!grid||!dropZone) return;
 
-        const frag = document.createDocumentFragment();
-        images.forEach((item, i) => {
-            const fig = document.createElement('figure');
-            fig.className = 'gallery-item';
-            fig.dataset.caption = item.caption || '';
-            fig.dataset.index   = i;
-
-            const img = document.createElement('img');
-            img.src   = item.src;
-            img.alt   = item.caption || 'Memory';
-            img.className = 'enlargeable';
-            img.dataset.src = item.src;
-            img.loading = 'lazy';
-
-            const cap = document.createElement('figcaption');
-            cap.textContent = item.caption || '';
-
-            fig.appendChild(img);
-            fig.appendChild(cap);
-            frag.appendChild(fig);
+        /* ── Load CONFIG images first ────────────────────────── */
+        (CONFIG.gallery||[]).forEach(item=>{
+            galleryImages.push({ src: item.src, caption: item.caption||'', isBlob: false });
         });
-        grid.appendChild(frag);
-        if (hint) hint.style.display = '';
+        if (galleryImages.length) renderGallery();
 
-        // Adjust grid columns if many images
-        if (images.length === 1) grid.style.gridTemplateColumns = '1fr';
-        else if (images.length === 2) grid.style.gridTemplateColumns = 'repeat(2,1fr)';
-        // 3+ defaults to the CSS 3-column grid
+        /* ── Drag & Drop on the zone ─────────────────────────── */
+        dropZone.addEventListener('click', e=>{
+            if (!e.target.closest('#drop-zone')) return;
+            fileInput.click();
+        });
+        dropZone.addEventListener('keydown', e=>{
+            if (e.key==='Enter'||e.key===' ') fileInput.click();
+        });
+
+        // Drag-over state
+        let dragDepth = 0;
+        dropZone.addEventListener('dragenter', e=>{ e.preventDefault(); dragDepth++; dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', e=>{ dragDepth--; if (dragDepth<=0){ dragDepth=0; dropZone.classList.remove('drag-over'); } });
+        dropZone.addEventListener('dragover',  e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
+        dropZone.addEventListener('drop', e=>{
+            e.preventDefault(); dragDepth=0; dropZone.classList.remove('drag-over');
+            processFiles(e.dataTransfer.files);
+        });
+
+        // Also accept drops on the whole page (when not on welcome screen)
+        document.addEventListener('dragover',  e=>{ if (!$('#welcome-screen.fade-out')) return; e.preventDefault(); });
+        document.addEventListener('drop',      e=>{
+            const ws=$('#welcome-screen');
+            if (ws&&!ws.classList.contains('fade-out')) return;
+            if (e.target.closest('#drop-zone')) return; // handled above
+            e.preventDefault();
+            processFiles(e.dataTransfer.files);
+        });
+
+        /* ── File Input ──────────────────────────────────────── */
+        fileInput.addEventListener('change', ()=>{
+            processFiles(fileInput.files);
+            fileInput.value=''; // reset so same file can be added again
+        });
+
+        /* ── Process files ───────────────────────────────────── */
+        function processFiles(files) {
+            const imageFiles = [...files].filter(f=>f.type.startsWith('image/'));
+            if (!imageFiles.length) return;
+
+            let loaded = 0;
+            imageFiles.forEach(file=>{
+                const src     = URL.createObjectURL(file);
+                const caption = captionFromFilename(file.name);
+                galleryImages.push({ src, caption, isBlob:true });
+                loaded++;
+                if (loaded===imageFiles.length) renderGallery();
+            });
+        }
+
+        /* ── Clear button ────────────────────────────────────── */
+        if (clearBtn) clearBtn.addEventListener('click', ()=>{
+            // Revoke blob URLs to free memory
+            galleryImages.forEach(img=>{ if (img.isBlob) URL.revokeObjectURL(img.src); });
+            galleryImages.length = 0;
+            renderGallery();
+        });
+
+        /* ── Render ──────────────────────────────────────────── */
+        function renderGallery() {
+            // Clear existing
+            while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+            const count = galleryImages.length;
+
+            // Adjust grid layout
+            if (count===0) {
+                grid.style.display='none';
+                if (hint)  hint.style.display='none';
+                if (meta)  meta.style.display='none';
+                return;
+            }
+            grid.style.display='grid';
+            if (count===1)      grid.style.gridTemplateColumns='1fr';
+            else if (count===2) grid.style.gridTemplateColumns='repeat(2,1fr)';
+            else                grid.style.gridTemplateColumns='';
+
+            const frag=document.createDocumentFragment();
+            galleryImages.forEach((item,i)=>{
+                const fig=document.createElement('figure');
+                fig.className='gallery-item';
+                fig.dataset.index=i;
+
+                const img=document.createElement('img');
+                img.src=item.src; img.alt=item.caption||'Memory';
+                img.className='enlargeable'; img.loading='lazy';
+
+                const cap=document.createElement('figcaption');
+                cap.textContent=item.caption||'';
+
+                // Stagger entrance
+                fig.style.animationDelay=(i*60)+'ms';
+                fig.classList.add('gallery-item-enter');
+                setTimeout(()=>fig.classList.add('gallery-item-visible'), 50+i*60);
+
+                fig.appendChild(img); fig.appendChild(cap);
+                frag.appendChild(fig);
+            });
+            grid.appendChild(frag);
+
+            if (hint)  hint.style.display='';
+            if (meta)  { meta.style.display='flex'; }
+            if (countEl) countEl.textContent=`${count} photo${count!==1?'s':''}`;
+
+            // Rebuild lightbox thumbs
+            buildLightboxThumbs();
+        }
+
+        // Expose render for lightbox
+        window._galleryImages = galleryImages;
+        window._renderGallery = renderGallery;
     })();
 
     /* ═══════════════════════════════════════════════════════════
-       14. LIGHTBOX  (with prev/next navigation)
+       14. LIGHTBOX  (with thumbnail strip)
        ═══════════════════════════════════════════════════════════ */
     (function initLightbox() {
-        const box      = $('#lightbox');
-        const imgEl    = $('#lightbox-img');
-        const caption  = $('#lightbox-caption');
-        const backdrop = $('#lightbox-backdrop');
-        const closeBtn = $('#close-lightbox');
-        const btnPrev  = $('#lb-prev');
-        const btnNext  = $('#lb-next');
+        const box       = $('#lightbox');
+        const imgEl     = $('#lightbox-img');
+        const caption   = $('#lightbox-caption');
+        const backdrop  = $('#lightbox-backdrop');
+        const closeBtn  = $('#close-lightbox');
+        const btnPrev   = $('#lb-prev');
+        const btnNext   = $('#lb-next');
+        const thumbsEl  = $('#lb-thumbs');
         if (!box) return;
 
         let currentIdx = 0;
-        const images = CONFIG.gallery || [];
 
         function setImg(idx) {
+            const images = galleryImages;
             if (!images.length) return;
             currentIdx = ((idx % images.length) + images.length) % images.length;
             const item = images[currentIdx];
-            imgEl.style.opacity = '0';
-            const pre = new Image();
-            pre.onload = () => {
-                imgEl.src = item.src;
-                requestAnimationFrame(()=>requestAnimationFrame(()=>{ imgEl.style.opacity='1'; }));
-            };
-            pre.onerror = () => { imgEl.src=item.src; imgEl.style.opacity='1'; };
-            pre.src = item.src;
-            if (caption) caption.textContent = item.caption || '';
-            // Hide nav if only 1 image
-            const showNav = images.length > 1;
-            if (btnPrev) btnPrev.style.display = showNav ? '' : 'none';
-            if (btnNext) btnNext.style.display = showNav ? '' : 'none';
+            imgEl.style.opacity='0';
+            const pre=new Image();
+            pre.onload=()=>{ imgEl.src=item.src; requestAnimationFrame(()=>requestAnimationFrame(()=>{ imgEl.style.opacity='1'; })); };
+            pre.onerror=()=>{ imgEl.src=item.src; imgEl.style.opacity='1'; };
+            pre.src=item.src;
+            if (caption) caption.textContent=item.caption||'';
+            const showNav=images.length>1;
+            if (btnPrev) btnPrev.style.display=showNav?'':'none';
+            if (btnNext) btnNext.style.display=showNav?'':'none';
+            // Update active thumb
+            if (thumbsEl) {
+                $$('.lb-thumb',thumbsEl).forEach((t,i)=>t.classList.toggle('active',i===currentIdx));
+                // Scroll active thumb into view
+                const active=thumbsEl.querySelector('.lb-thumb.active');
+                if (active) active.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+            }
         }
 
         function open(idx) {
             setImg(idx);
-            box.classList.add('open');
-            box.setAttribute('aria-hidden','false');
+            box.classList.add('open'); box.setAttribute('aria-hidden','false');
             document.body.style.overflow='hidden';
         }
         function close() {
-            box.classList.remove('open');
-            box.setAttribute('aria-hidden','true');
+            box.classList.remove('open'); box.setAttribute('aria-hidden','true');
             document.body.style.overflow='';
-            setTimeout(()=>{ imgEl.src=''; imgEl.style.opacity='0'; }, 550);
+            setTimeout(()=>{ imgEl.src=''; imgEl.style.opacity='0'; },550);
         }
+
+        // Build thumb strip
+        window.buildLightboxThumbs = function() {
+            if (!thumbsEl) return;
+            while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
+            const images = galleryImages;
+            if (images.length < 2) { thumbsEl.style.display='none'; return; }
+            thumbsEl.style.display='flex';
+            images.forEach((item,i)=>{
+                const btn=document.createElement('button');
+                btn.className='lb-thumb'; btn.setAttribute('aria-label',`Photo ${i+1}`);
+                const img=document.createElement('img');
+                img.src=item.src; img.alt=''; img.loading='lazy';
+                btn.appendChild(img);
+                btn.addEventListener('click',e=>{ e.stopPropagation(); setImg(i); });
+                thumbsEl.appendChild(btn);
+            });
+        };
 
         // Click on gallery item
         document.addEventListener('click',e=>{
             const item=e.target.closest('.gallery-item');
-            if (item) {
-                e.preventDefault(); e.stopPropagation();
-                const idx = parseInt(item.dataset.index, 10);
-                open(isNaN(idx) ? 0 : idx);
-            }
+            if (item) { e.preventDefault(); e.stopPropagation(); const idx=parseInt(item.dataset.index,10); open(isNaN(idx)?0:idx); }
         });
 
         if (btnPrev) btnPrev.addEventListener('click',e=>{ e.stopPropagation(); setImg(currentIdx-1); });
         if (btnNext) btnNext.addEventListener('click',e=>{ e.stopPropagation(); setImg(currentIdx+1); });
-        backdrop.addEventListener('click', close);
+        backdrop.addEventListener('click',close);
         closeBtn.addEventListener('click',e=>{ e.stopPropagation(); close(); });
         document.addEventListener('keydown',e=>{
             if (!box.classList.contains('open')) return;
@@ -703,7 +815,6 @@ const CONFIG = {
             if (e.key==='ArrowLeft')  setImg(currentIdx-1);
             if (e.key==='ArrowRight') setImg(currentIdx+1);
         });
-        // Swipe support
         let touchX=null;
         box.addEventListener('touchstart',e=>{ touchX=e.touches[0].clientX; },{ passive:true });
         box.addEventListener('touchend',e=>{
@@ -734,6 +845,9 @@ const CONFIG = {
             "You are, without question, the funniest person I know.",
             "Even the boring moments feel good with you in them.",
             "I'm really glad I get to know you. Like actually really glad.",
+            "You make everything feel lighter. Even without trying.",
+            "There's nobody quite like you, and I mean that completely.",
+            "The world is genuinely better with you in it. I mean that.",
         ];
         function updateTree(n) {
             treeParts.filter(el=>parseInt(el.dataset.s,10)<=n&&!el.classList.contains('show'))
@@ -767,18 +881,17 @@ const CONFIG = {
             { id:'line-4',   text:"No matter what, you will always be my cutest person. Even when things are hard, I'll be there." },
             { id:'line-sig', text:'— Water ❤️' },
         ];
-        let li=0, ci=0;
+        let li=0,ci=0;
         function tick() {
             if (li>=lines.length) return;
             const el=document.getElementById(lines[li].id);
             if (!el) { li++; ci=0; setTimeout(tick,10); return; }
             const text=lines[li].text;
             if (!el.classList.contains('typing-cursor')) el.classList.add('typing-cursor');
-            if (ci<text.length) {
-                el.textContent+=text[ci++]; setTimeout(tick,33);
-            } else {
+            if (ci<text.length) { el.textContent+=text[ci++]; setTimeout(tick,28); }
+            else {
                 el.classList.remove('typing-cursor'); li++; ci=0;
-                setTimeout(tick, li<lines.length?520:0);
+                setTimeout(tick,li<lines.length?500:0);
             }
         }
         tick();
@@ -788,14 +901,13 @@ const CONFIG = {
        17. CLICK SPARKS
        ═══════════════════════════════════════════════════════════ */
     (function initSparks() {
-        const syms=['✦','✶','·','⋆','˚','🌙','°','*'];
-        const cols=['#e8c96a','#c4d8f5','#a0b8e8','#f0dfa0','#b0cce8'];
+        const syms=['✦','✶','·','⋆','˚','🌙','°','*','♡'];
+        const cols=['#e8c96a','#c4d8f5','#a0b8e8','#f0dfa0','#b0cce8','#f5c0d0'];
         document.addEventListener('click',e=>{
-            if (e.target.closest('button')||e.target.closest('.gallery-item')) return;
+            if (e.target.closest('button')||e.target.closest('.gallery-item')||e.target.closest('#drop-zone')) return;
             const f=document.createDocumentFragment();
-            for (let i=0;i<8;i++) {
-                const el=document.createElement('div');
-                el.className='click-spark';
+            for (let i=0;i<9;i++) {
+                const el=document.createElement('div'); el.className='click-spark';
                 el.textContent=syms[randInt(0,syms.length-1)];
                 el.style.color=cols[randInt(0,cols.length-1)];
                 el.style.fontSize=rand(.6,1.15)+'rem';
@@ -814,12 +926,12 @@ const CONFIG = {
        18. MARRIAGE CERTIFICATE
        ═══════════════════════════════════════════════════════════ */
     (function initMarriageCert() {
-        const signBtn=$('#cert-sign-btn');
-        const sigMoonName=$('#sig-moon-name');
-        const moonSigLine=$('#moon-sig-line');
-        const seal=$('#cert-seal');
-        const prompt=$('#cert-prompt');
-        const signedNote=$('#cert-signed-note');
+        const signBtn    = $('#cert-sign-btn');
+        const sigMoon    = $('#sig-moon-name');
+        const moonLine   = $('#moon-sig-line');
+        const seal       = $('#cert-seal');
+        const prompt     = $('#cert-prompt');
+        const signedNote = $('#cert-signed-note');
         if (!signBtn) return;
         const msgs=[
             "It's official. Legally binding under moonlight. 🌙",
@@ -829,11 +941,10 @@ const CONFIG = {
         ];
         signBtn.addEventListener('click',()=>{
             if (signBtn.disabled) return; signBtn.disabled=true;
-            const name='Moon ♡'; sigMoonName.textContent='';
-            sigMoonName.classList.add('signed'); moonSigLine.classList.add('signed');
+            const name='Moon ♡'; sigMoon.textContent=''; sigMoon.classList.add('signed'); moonLine.classList.add('signed');
             let i=0;
             function typeSig() {
-                if (i<name.length) { sigMoonName.textContent+=name[i++]; setTimeout(typeSig,82); }
+                if (i<name.length) { sigMoon.textContent+=name[i++]; setTimeout(typeSig,82); }
                 else {
                     setTimeout(()=>{ seal.classList.add('stamped'); if(window._shootStar) window._shootStar(); spawnConfettiBurst(50); },320);
                     setTimeout(()=>{ signedNote.textContent=msgs[randInt(0,msgs.length-1)]; signedNote.classList.add('visible'); if(prompt) prompt.style.opacity='0'; signBtn.style.display='none'; },650);
@@ -841,6 +952,31 @@ const CONFIG = {
             }
             typeSig();
         });
+    })();
+
+    /* ═══════════════════════════════════════════════════════════
+       19. PARALLAX on scroll (subtle card offset)
+       ═══════════════════════════════════════════════════════════ */
+    (function initParallax() {
+        if (window.matchMedia('(max-width:768px)').matches) return;
+        const cards=$$('.tilt-card');
+        let ticking=false;
+        window.addEventListener('scroll',()=>{
+            if (ticking) return; ticking=true;
+            requestAnimationFrame(()=>{
+                const cy=window.innerHeight/2;
+                cards.forEach(card=>{
+                    if (!card.classList.contains('visible')) return;
+                    const r=card.getBoundingClientRect();
+                    const dist=(r.top+r.height/2)-cy;
+                    const offset=(dist/window.innerHeight)*10;
+                    // Only apply if not being tilted
+                    if (!card.style.transform||card.style.transform.includes('translateY(-6px)')) return;
+                    card.style.setProperty('--parallax-y', offset.toFixed(2)+'px');
+                });
+                ticking=false;
+            });
+        },{ passive:true });
     })();
 
 })();
