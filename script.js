@@ -1,39 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════
    MOON — script.js  ✦  Polish Edition
-
-   ┌─────────────────────────────────────────────────────────────┐
-   │  ✦  EDIT THIS CONFIG BLOCK — everything else is automatic  │
-   └─────────────────────────────────────────────────────────────┘
-
-   MUSIC  →  drop MP3s into  music/  and list them below
-   GALLERY → list permanent photos here, OR just drag & drop in browser
-   START DATE → set when you two started talking
-
    ═══════════════════════════════════════════════════════════════ */
 
 const CONFIG = {
-
-    /* ── Date you started talking (YYYY-MM-DD) ─────────────── */
     startDate: '2024-06-01',
-
-    /* ── Playlist ───────────────────────────────────────────── */
     playlist: [
         { title: 'Our Song',      src: 'music/our-song.mp3'     },
         { title: 'Another Song',  src: 'music/another-song.mp3' },
         { title: 'Late Nights',   src: 'music/late-nights.mp3'  },
     ],
-
-    /* ── Optional starting gallery photos ──────────────────── */
-    gallery: [
-        // { src: 'images/gallery/photo1.jpg', caption: 'our game nights' },
-        // { src: 'images/gallery/photo2.jpg', caption: 'that one message' },
-    ],
-
+    gallery: [],
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   INTERNALS — do not edit below
-   ═══════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
 
@@ -66,9 +44,9 @@ const CONFIG = {
         return String(n);
     }
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        1. BIRTHDAY COUNTDOWN
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initCountdown() {
         const dEl = $('#cd-d'), hEl = $('#cd-h'), mEl = $('#cd-m'), sEl = $('#cd-s');
         const msgEl = $('#bday-msg');
@@ -126,9 +104,9 @@ const CONFIG = {
         tick(); setInterval(tick, 1000);
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        1b. TIME TOGETHER
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initTogether() {
         const daysEl  = $('#tog-days');
         const hoursEl = $('#tog-hours');
@@ -179,9 +157,9 @@ const CONFIG = {
         }, 60000);
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        2. CONFETTI
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     function spawnConfettiBurst(count = 60) {
         const cont = $('#confetti-container'); if (!cont) return;
         const cols = ['#e8c96a','#c4d8f5','#f5a0c0','#a0e0d0','#ffffff','#ffd700'];
@@ -197,9 +175,9 @@ const CONFIG = {
         cont.appendChild(f);
     }
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        3. NEBULA
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initNebula() {
         const canvas = $('#nebula-canvas');
         const ctx    = canvas.getContext('2d', { alpha: false });
@@ -242,9 +220,9 @@ const CONFIG = {
         resize(); raf = requestAnimationFrame(draw);
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        4. STARS
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initStars() {
         const canvas = $('#star-canvas');
         const ctx    = canvas.getContext('2d');
@@ -306,9 +284,9 @@ const CONFIG = {
         setInterval(() => { if (!document.hidden && Math.random()<.4) shoot(); }, 3500);
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        5. ORBIT MOON
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initOrbitMoon() {
         const moon = $('#orbit-moon'); if (!moon) return;
         let angle = -Math.PI/2;
@@ -326,9 +304,9 @@ const CONFIG = {
         })();
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        6. DUST
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initDust() {
         const cont = $('#dust-container');
         function spawn() {
@@ -341,9 +319,9 @@ const CONFIG = {
         setInterval(spawn, 1900);
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        7. MUSIC PLAYER
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     let audioCtx=null, analyser=null, dataArray=null, vizActive=false;
 
     function setupAudio(audioEl) {
@@ -427,7 +405,7 @@ const CONFIG = {
         window._startMusic = () => { setupAudio(music); loadAndPlay(shuffled ? randInt(0,order.length-1) : 0); };
     })();
 
-    /* ─── Ring Visualizer ─────────────────────────────────── */
+    /* ── Ring Visualizer ────────────────────────────────── */
     (function initRingViz() {
         const rc=$('#music-ring-canvas'); if (!rc) return;
         const ctx=rc.getContext('2d'); const S=110; rc.width=rc.height=S;
@@ -451,7 +429,7 @@ const CONFIG = {
         })();
     })();
 
-    /* ─── Horizon Visualizer ──────────────────────────────── */
+    /* ── Horizon Visualizer ─────────────────────────────── */
     (function initHorizonViz() {
         const canvas=$('#viz-canvas'); if (!canvas) return;
         const ctx=canvas.getContext('2d');
@@ -480,9 +458,9 @@ const CONFIG = {
         })();
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        8. CURSOR
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initCursor() {
         const cursor=$('.custom-cursor'); if (!cursor) return;
         let mx=-200, my=-200, cx=-200, cy=-200;
@@ -504,9 +482,9 @@ const CONFIG = {
         document.addEventListener('mouseenter',()=>{ cursor.style.opacity='1'; });
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        9. SCROLL PROGRESS
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function() {
         const bar = $('#scroll-progress');
         window.addEventListener('scroll',()=>{
@@ -515,9 +493,9 @@ const CONFIG = {
         },{ passive:true });
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        10. WELCOME
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initWelcome() {
         const screen   = $('#welcome-screen');
         const enterBtn = $('#enter-btn');
@@ -528,9 +506,9 @@ const CONFIG = {
         });
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        11. CARD REVEAL
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initReveal() {
         function revealList(card) {
             $$('.list-item', card).forEach((item,i)=>{ setTimeout(()=>item.classList.add('visible'), i*150+260); });
@@ -551,9 +529,9 @@ const CONFIG = {
         allCards.forEach(c => obs.observe(c));
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        12. 3D TILT
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initTilt() {
         if (window.matchMedia('(max-width: 768px)').matches) return;
         $$('.tilt-card').forEach(card => {
@@ -575,27 +553,39 @@ const CONFIG = {
         });
     })();
 
-    /* ═════════════════════════════════════════════════════════
-       13. GALLERY  (drag-and-drop + file picker + CONFIG + persist)
-       ═════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════
+       13. GALLERY
+       ─────────────────────────────────────────────────────
+       Architecture (fixed):
+         • GALLERY_DATA  = static photos from generate-gallery.ps1
+                          always loaded, never stored in localStorage
+         • userUploads   = drag-and-drop additions (base64)
+                          saved to localStorage, appended after static photos
+         • galleryImages = GALLERY_DATA + userUploads  (combined at runtime)
+    ═══════════════════════════════════════════════════════ */
     const galleryImages = [];
-    const GALLERY_KEY   = 'moonGallery_v2';
+    const UPLOADS_KEY   = 'moonUploads_v1'; // only stores user drag-and-drop base64
 
-    /* ── localStorage helpers ─────────────────────────────── */
-    function saveGallery() {
+    /* ── FIX 1: localStorage only stores user uploads, not GALLERY_DATA ── */
+    function saveUserUploads() {
         try {
-            localStorage.setItem(GALLERY_KEY, JSON.stringify(
-                galleryImages.map(({ src, caption }) => ({ src, caption, isBlob: false }))
+            const uploads = galleryImages.filter(img => img.isUpload);
+            localStorage.setItem(UPLOADS_KEY, JSON.stringify(
+                uploads.map(({ src, caption }) => ({ src, caption, isUpload: true }))
             ));
-        } catch (e) { console.warn('Gallery save failed (storage may be full):', e); }
+        } catch (e) {
+            console.warn('Could not save uploads (storage may be full):', e);
+        }
     }
 
-    function loadSavedGallery() {
+    function loadUserUploads() {
         try {
-            const raw = localStorage.getItem(GALLERY_KEY);
+            const raw = localStorage.getItem(UPLOADS_KEY);
             if (!raw) return;
-            JSON.parse(raw).forEach(item => galleryImages.push({ ...item, isBlob: false }));
-        } catch (e) { console.warn('Gallery load failed:', e); }
+            JSON.parse(raw).forEach(item =>
+                galleryImages.push({ src: item.src, caption: item.caption || '', isUpload: true })
+            );
+        } catch (e) { console.warn('Could not load saved uploads:', e); }
     }
 
     /* ── Spotlight ────────────────────────────────────────── */
@@ -627,21 +617,16 @@ const CONFIG = {
             openLightboxAt(spotlightIdx);
         });
         spotlightEl.querySelector('.spotlight-prev').addEventListener('click', e => {
-            e.stopPropagation();
-            goSpotlight(spotlightIdx - 1);
-            resetSpotlightTimer();
+            e.stopPropagation(); goSpotlight(spotlightIdx - 1); resetSpotlightTimer();
         });
         spotlightEl.querySelector('.spotlight-next').addEventListener('click', e => {
-            e.stopPropagation();
-            goSpotlight(spotlightIdx + 1);
-            resetSpotlightTimer();
+            e.stopPropagation(); goSpotlight(spotlightIdx + 1); resetSpotlightTimer();
         });
         spotlightEl.addEventListener('mouseenter', () => clearInterval(spotlightTimer));
         spotlightEl.addEventListener('mouseleave', startSpotlightTimer);
     }
 
     function openLightboxAt(idx) {
-        // Creates a temporary gallery-item element that the existing lightbox click handler picks up
         const tmp = document.createElement('div');
         tmp.className = 'gallery-item';
         tmp.dataset.index = idx;
@@ -651,21 +636,28 @@ const CONFIG = {
         setTimeout(() => tmp.remove(), 100);
     }
 
+    /* ── FIX 5: spotlight image show — handle cached images correctly ── */
+    function showSpotlightImage(imgEl, src) {
+        imgEl.style.opacity   = '0';
+        imgEl.style.transform = 'scale(1.05)';
+        const reveal = () => {
+            imgEl.style.opacity   = '1';
+            imgEl.style.transform = 'scale(1)';
+        };
+        imgEl.onload  = reveal;
+        imgEl.onerror = reveal; // show broken image rather than staying hidden
+        imgEl.src     = src;
+        // If already cached and complete, fire reveal immediately
+        if (imgEl.complete && imgEl.naturalWidth) reveal();
+    }
+
     function goSpotlight(idx) {
         if (!spotlightEl || !galleryImages.length) return;
         spotlightIdx = ((idx % galleryImages.length) + galleryImages.length) % galleryImages.length;
         const item = galleryImages[spotlightIdx];
         const img  = spotlightEl.querySelector('.spotlight-img');
 
-        img.style.opacity   = '0';
-        img.style.transform = 'scale(1.05)';
-
-        const show = () => { img.style.opacity = '1'; img.style.transform = 'scale(1)'; };
-        setTimeout(() => {
-            img.src = item.src;
-            if (img.complete && img.naturalWidth) show();
-            else img.onload = show;
-        }, 320);
+        setTimeout(() => showSpotlightImage(img, item.src), 60);
 
         const capEl = spotlightEl.querySelector('.spotlight-caption');
         const numEl = spotlightEl.querySelector('.spotlight-counter');
@@ -680,7 +672,6 @@ const CONFIG = {
         const dotsEl = spotlightEl ? spotlightEl.querySelector('.spotlight-dots') : null;
         if (!dotsEl) return;
         dotsEl.innerHTML = '';
-        // Only show dots for ≤ 18 photos
         if (galleryImages.length <= 1 || galleryImages.length > 18) return;
         galleryImages.forEach((_, i) => {
             const dot = document.createElement('button');
@@ -724,22 +715,20 @@ const CONFIG = {
         const clearBtn  = $('#gallery-clear');
         if (!grid || !dropZone) return;
 
-        // Spotlight container
         createSpotlight();
 
-        // Load persisted images first
-        loadSavedGallery();
+        /* ── FIX 1 & 2: GALLERY_DATA always loads first, unconditionally ── */
+        const staticSource = window.GALLERY_DATA || CONFIG.gallery || [];
+        staticSource.forEach(item =>
+            galleryImages.push({ src: item.src, caption: item.caption || '', isUpload: false })
+        );
 
-        // Load auto-generated or CONFIG images only if nothing is saved
-        if (!galleryImages.length) {
-            const source = window.GALLERY_DATA || CONFIG.gallery || [];
-            source.forEach(item =>
-                galleryImages.push({ src: item.src, caption: item.caption || '', isBlob: false })
-            );
-        }
+        /* ── Then append any user drag-and-drop uploads from localStorage ── */
+        loadUserUploads();
+
         if (galleryImages.length) renderGallery();
 
-        // Click to open picker
+        // Click / keyboard to open picker
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
 
@@ -750,7 +739,6 @@ const CONFIG = {
         dropZone.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
         dropZone.addEventListener('drop',      e => { e.preventDefault(); dragDepth = 0; dropZone.classList.remove('drag-over'); processFiles(e.dataTransfer.files); });
 
-        // Page-wide drop
         document.addEventListener('dragover', e => {
             const ws = $('#welcome-screen');
             if (!ws || !ws.classList.contains('fade-out')) return;
@@ -766,15 +754,17 @@ const CONFIG = {
 
         fileInput.addEventListener('change', () => { processFiles(fileInput.files); fileInput.value = ''; });
 
+        /* ── FIX 3: Clear only removes user uploads; GALLERY_DATA stays ── */
         if (clearBtn) clearBtn.addEventListener('click', () => {
-            galleryImages.forEach(img => { if (img.isBlob) URL.revokeObjectURL(img.src); });
-            galleryImages.length = 0;
+            // Remove only uploads, keep static photos
+            for (let i = galleryImages.length - 1; i >= 0; i--) {
+                if (galleryImages[i].isUpload) galleryImages.splice(i, 1);
+            }
             spotlightIdx = 0;
-            try { localStorage.removeItem(GALLERY_KEY); } catch (e) {}
+            try { localStorage.removeItem(UPLOADS_KEY); } catch (e) {}
             renderGallery();
         });
 
-        // Async processFiles — converts to base64 for persistence
         async function processFiles(files) {
             const imgs = [...files].filter(f => f.type.startsWith('image/'));
             if (!imgs.length) return;
@@ -786,10 +776,10 @@ const CONFIG = {
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 });
-                galleryImages.push({ src, caption: captionFromFilename(file.name), isBlob: false });
+                galleryImages.push({ src, caption: captionFromFilename(file.name), isUpload: true });
             }
             dropZone.classList.remove('loading');
-            saveGallery();
+            saveUserUploads();
             renderGallery();
         }
 
@@ -797,7 +787,6 @@ const CONFIG = {
             while (grid.firstChild) grid.removeChild(grid.firstChild);
             const count = galleryImages.length;
 
-            // Update spotlight
             updateSpotlight();
 
             if (count === 0) {
@@ -809,7 +798,7 @@ const CONFIG = {
             }
 
             grid.style.display = '';
-            grid.style.gridTemplateColumns = ''; // masonry handled by CSS
+            grid.style.gridTemplateColumns = '';
 
             const frag = document.createDocumentFragment();
             galleryImages.forEach((item, i) => {
@@ -839,9 +828,9 @@ const CONFIG = {
         window._renderGallery = renderGallery;
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        14. LIGHTBOX
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initLightbox() {
         const box      = $('#lightbox');
         const imgEl    = $('#lightbox-img');
@@ -860,10 +849,10 @@ const CONFIG = {
             currentIdx = ((idx % galleryImages.length) + galleryImages.length) % galleryImages.length;
             const item = galleryImages[currentIdx];
             imgEl.style.opacity = '0';
-            const pre = new Image();
-            pre.onload = () => { imgEl.src = item.src; requestAnimationFrame(() => requestAnimationFrame(() => { imgEl.style.opacity = '1'; })); };
-            pre.onerror = () => { imgEl.src = item.src; imgEl.style.opacity = '1'; };
-            pre.src = item.src;
+            imgEl.onload = () => { imgEl.style.opacity = '1'; };
+            imgEl.onerror = () => { imgEl.style.opacity = '1'; };
+            imgEl.src = item.src;
+            if (imgEl.complete && imgEl.naturalWidth) imgEl.style.opacity = '1';
             if (caption) caption.textContent = item.caption || '';
             const showNav = galleryImages.length > 1;
             if (btnPrev) btnPrev.style.display = showNav ? '' : 'none';
@@ -924,9 +913,9 @@ const CONFIG = {
         });
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        15. BLOOM TREE
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initBloom() {
         const treeSvg  = $('#tree-svg');
         const treeParts= $$('.tp', treeSvg);
@@ -978,9 +967,9 @@ const CONFIG = {
         });
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        16. TYPEWRITER
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     let typingDone = false;
     function startTypewriter() {
         if (typingDone) return; typingDone = true;
@@ -1007,9 +996,9 @@ const CONFIG = {
         tick();
     }
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        17. CLICK SPARKS
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initSparks() {
         const syms = ['✦','✶','·','⋆','˚','🌙','°','*','♡'];
         const cols = ['#e8c96a','#c4d8f5','#a0b8e8','#f0dfa0','#b0cce8','#f5c0d0'];
@@ -1032,9 +1021,9 @@ const CONFIG = {
         },{ passive:true });
     })();
 
-    /* ═════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════
        18. MARRIAGE CERTIFICATE
-       ═════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════ */
     (function initMarriageCert() {
         const signBtn    = $('#cert-sign-btn');
         const sigMoon    = $('#sig-moon-name');
