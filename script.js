@@ -14,7 +14,7 @@
 const CONFIG = {
 
     /* ── Date you started talking (YYYY-MM-DD) ─────────────── */
-    startDate: '2024-06-01',
+    startDate: '2025-03-20',
 
     /* ── Playlist ───────────────────────────────────────────── */
     playlist: [
@@ -60,9 +60,10 @@ const CONFIG = {
             .trim();
     }
 
-    // [FIX APPLIED] - Replaced custom number formatting with native Intl.NumberFormat for exact relationship days/hours display
     function fmtNum(n) {
-        return new Intl.NumberFormat('en-US').format(n);
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (n >= 1_000)     return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+        return String(n);
     }
 
     /* ═════════════════════════════════════════════════════════
@@ -73,7 +74,6 @@ const CONFIG = {
         const msgEl = $('#bday-msg');
         if (!dEl) return;
         let prev = { d:-1, h:-1, m:-1, s:-1 };
-        let bdayTriggered = false; // [FIX APPLIED] Prevents infinite loop
 
         function getTarget() {
             const now = new Date();
@@ -97,38 +97,22 @@ const CONFIG = {
             "You made it to 21. That deserves a whole celebration.",
             "Happy birthday. I hope today feels as good as you make me feel. 🌕",
         ];
+        let bdayIdx = 0;
 
         function tick() {
             const diff = getTarget() - new Date();
-            
-            // [FIX APPLIED] - Solves the wild flickering and infinite confetti lag
             if (diff <= 0) {
-                ['d','h','m','s'].forEach(k => { 
-                    const el = document.getElementById('cd-'+k); 
-                    if(el) el.textContent='00'; 
-                });
-                
-                // Check if within the 24-hour birthday window
-                if (diff > -86400000) { 
-                    if (!bdayTriggered) {
-                        spawnConfettiBurst(100); 
-                        if (msgEl) msgEl.textContent = bdayLines[randInt(0, bdayLines.length - 1)];
-                        bdayTriggered = true; // Locks the event so it only fires once
-                    }
-                } else if (msgEl) {
-                    msgEl.textContent = "Hope you had a wonderful birthday. 🌙";
-                }
+                ['d','h','m','s'].forEach(k => { const el = document.getElementById('cd-'+k); if(el) el.textContent='00'; });
+                if (msgEl) msgEl.textContent = bdayLines[bdayIdx % bdayLines.length];
+                if (diff > -86400000) { spawnConfettiBurst(); bdayIdx++; }
                 return;
             }
-            
-            bdayTriggered = false; // Reset for next year
             const t = Math.floor(diff / 1000);
             const d = Math.floor(t / 86400);
             bump(dEl, d, 'd');
             bump(hEl, Math.floor((t % 86400) / 3600), 'h');
             bump(mEl, Math.floor((t % 3600) / 60), 'm');
             bump(sEl, t % 60, 's');
-            
             if (msgEl) {
                 msgEl.textContent =
                     d===0 && Math.floor((t%86400)/3600)===0 ? "Any minute now. 🌙"
@@ -252,15 +236,9 @@ const CONFIG = {
             raf = requestAnimationFrame(draw);
         }
         window.addEventListener('resize', resize, { passive:true });
-        
-        // [FIX APPLIED] - Cancel the specific animation frame to stop stacking performance leaks
         document.addEventListener('visibilitychange', () => {
-            cancelAnimationFrame(raf); 
-            if (!document.hidden) {
-                raf = requestAnimationFrame(draw);
-            }
+            document.hidden ? cancelAnimationFrame(raf) : (raf = requestAnimationFrame(draw));
         });
-        
         resize(); raf = requestAnimationFrame(draw);
     })();
 
@@ -321,15 +299,9 @@ const CONFIG = {
             raf = requestAnimationFrame(draw);
         }
         window.addEventListener('resize', resize, { passive:true });
-        
-        // [FIX APPLIED] - Cancel the specific animation frame to stop stacking performance leaks
         document.addEventListener('visibilitychange', () => {
-            cancelAnimationFrame(raf); 
-            if (!document.hidden) {
-                raf = requestAnimationFrame(draw);
-            }
+            document.hidden ? cancelAnimationFrame(raf) : (raf = requestAnimationFrame(draw));
         });
-        
         resize(); raf = requestAnimationFrame(draw);
         setInterval(() => { if (!document.hidden && Math.random()<.4) shoot(); }, 3500);
     })();
@@ -437,28 +409,15 @@ const CONFIG = {
             if (cursor===0&&shuffled) buildOrder();
             loadAndPlay(cursor);
         });
-        
-        musicBtn.addEventListener('click', () => {
+        musicBtn.addEventListener('click',()=>{
             setupAudio(music);
-            if (playing) {
-                fade(music, 0, 1200);
-                musicIcon.textContent = '🎵';
-                if (musicLbl) musicLbl.textContent = 'Our Song';
-            } else {
-                // [FIX APPLIED] - Uses robust audio path checking instead of location.href which fails consistently
-                if (!music.getAttribute('src')) {
-                    buildOrder();
-                    loadAndPlay(0);
-                    return;
-                }
-                music.play().catch(() => {});
-                fade(music, 0.5, 1200);
-                musicIcon.textContent = '⏸️';
-                if (musicLbl) musicLbl.textContent = 'Pause';
+            if (playing) { fade(music,0,1200); musicIcon.textContent='🎵'; if(musicLbl) musicLbl.textContent='Our Song'; }
+            else {
+                if (!music.src||music.src===location.href) { buildOrder(); loadAndPlay(0); return; }
+                music.play().catch(()=>{}); fade(music,0.5,1200); musicIcon.textContent='⏸️'; if(musicLbl) musicLbl.textContent='Pause';
             }
-            playing = !playing;
+            playing=!playing;
         });
-
         if (btnPrev) btnPrev.addEventListener('click',()=>{ setupAudio(music); cursor=(cursor-1+order.length)%order.length; loadAndPlay(cursor); });
         if (btnNext) btnNext.addEventListener('click',()=>{ setupAudio(music); cursor=(cursor+1)%order.length; loadAndPlay(cursor); });
         if (btnShuffle) btnShuffle.addEventListener('click',()=>{
@@ -482,31 +441,67 @@ const CONFIG = {
                 const barH=val*barMax+1.5, angle=i/total*Math.PI*2-Math.PI/2;
                 const x1=cx+Math.cos(angle)*base, y1=cy+Math.sin(angle)*base;
                 const x2=cx+Math.cos(angle)*(base+barH), y2=cy+Math.sin(angle)*(base+barH);
+                const alpha=.32+val*.68;
+                const g=ctx.createLinearGradient(x1,y1,x2,y2);
+                g.addColorStop(0,`rgba(232,201,106,${alpha*.7})`);
+                g.addColorStop(1,`rgba(196,216,245,${alpha})`);
                 ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
-                ctx.strokeStyle=`rgba(255,255,255,${0.2+val*0.6})`; ctx.lineWidth=2; ctx.stroke();
+                ctx.strokeStyle=g; ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.stroke();
+            }
+        })();
+    })();
+
+    /* ─── Horizon Visualizer ──────────────────────────────── */
+    (function initHorizonViz() {
+        const canvas=$('#viz-canvas'); if (!canvas) return;
+        const ctx=canvas.getContext('2d');
+        let W=window.innerWidth; canvas.width=W; canvas.height=90;
+        window.addEventListener('resize',()=>{ W=window.innerWidth; canvas.width=W; },{ passive:true });
+        let smooth=[];
+        (function draw() {
+            requestAnimationFrame(draw); ctx.clearRect(0,0,W,90);
+            if (!vizActive||!analyser) return;
+            analyser.getByteFrequencyData(dataArray);
+            const bars=80, usable=Math.floor(dataArray.length*.6), barW=W/bars;
+            if (smooth.length!==bars) smooth=new Array(bars).fill(0);
+            for (let i=0;i<bars;i++) {
+                const raw=dataArray[Math.floor(i/bars*usable)]/255;
+                smooth[i]=lerp(smooth[i],raw,0.12);
+                const h=smooth[i]*76+1,x=i*barW,y=90-h;
+                const g=ctx.createLinearGradient(x,90,x,y);
+                g.addColorStop(0,`rgba(232,201,106,${.16+smooth[i]*.36})`);
+                g.addColorStop(.6,`rgba(196,216,245,${.12+smooth[i]*.38})`);
+                g.addColorStop(1,`rgba(196,216,245,${.05+smooth[i]*.26})`);
+                ctx.fillStyle=g; ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x+1,y,barW-2,h,[2,2,0,0]);
+                else ctx.rect(x+1,y,barW-2,h);
+                ctx.fill();
             }
         })();
     })();
 
     /* ═════════════════════════════════════════════════════════
-       8. CUSTOM CURSOR
+       8. CURSOR
        ═════════════════════════════════════════════════════════ */
     (function initCursor() {
-        if (window.matchMedia('(pointer: coarse)').matches) return;
-        const cursor = $('.custom-cursor'), core = $('.cursor-core'), ring = $('.cursor-ring');
-        if (!cursor) return;
-        let mx=window.innerWidth/2, my=window.innerHeight/2, rx=mx, ry=my;
-        window.addEventListener('mousemove', e=>{ mx=e.clientX; my=e.clientY; },{ passive:true });
-        (function loop(){
-            rx += (mx-rx)*0.2; ry += (my-ry)*0.2;
-            core.style.transform=`translate(${mx}px,${my}px)`;
-            ring.style.transform=`translate(${rx}px,${ry}px)`;
+        const cursor=$('.custom-cursor'); if (!cursor) return;
+        let mx=-200, my=-200, cx=-200, cy=-200;
+        document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; },{ passive:true });
+        (function loop() {
+            cx=lerp(cx,mx,.12); cy=lerp(cy,my,.12);
+            cursor.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`;
             requestAnimationFrame(loop);
         })();
-        document.addEventListener('mousedown', ()=>cursor.classList.add('active'));
-        document.addEventListener('mouseup', ()=>cursor.classList.remove('active'));
-        document.addEventListener('mouseleave', ()=>cursor.style.opacity='0');
-        document.addEventListener('mouseenter', ()=>cursor.style.opacity='1');
+        document.addEventListener('mouseover',e=>{
+            if (e.target.closest('button,.gallery-item,#close-lightbox,.phase,.list-item,a,.drop-zone,.lb-thumb,#gallery-spotlight'))
+                cursor.classList.add('hovering');
+        });
+        document.addEventListener('mouseout',e=>{
+            if (e.target.closest('button,.gallery-item,#close-lightbox,.phase,.list-item,a,.drop-zone,.lb-thumb,#gallery-spotlight'))
+                cursor.classList.remove('hovering');
+        });
+        document.addEventListener('mouseleave',()=>{ cursor.style.opacity='0'; });
+        document.addEventListener('mouseenter',()=>{ cursor.style.opacity='1'; });
     })();
 
     /* ═════════════════════════════════════════════════════════
@@ -524,7 +519,7 @@ const CONFIG = {
        10. WELCOME
        ═════════════════════════════════════════════════════════ */
     (function initWelcome() {
-        const screen = $('#welcome-screen');
+        const screen   = $('#welcome-screen');
         const enterBtn = $('#enter-btn');
         if (!enterBtn) return;
         enterBtn.addEventListener('click', () => {
@@ -547,7 +542,7 @@ const CONFIG = {
                 const idx = allCards.indexOf(entry.target);
                 setTimeout(() => {
                     entry.target.classList.add('visible');
-                    if (entry.target.id === 'love-card') revealList(entry.target);
+                    if (entry.target.id === 'love-card')   revealList(entry.target);
                     if (entry.target.id === 'letter-card') setTimeout(startTypewriter, 900);
                 }, 60 + idx * 40);
                 obs.unobserve(entry.target);
@@ -566,111 +561,312 @@ const CONFIG = {
             card.addEventListener('mouseenter', ()=>{ inside=true; });
             card.addEventListener('mousemove', e=>{
                 const r=card.getBoundingClientRect();
-                tx=((e.clientY-r.top -r.height/2)/(r.height/2))*-4.5;
+                tx=((e.clientY-r.top  -r.height/2)/(r.height/2))*-4.5;
                 ty=((e.clientX-r.left -r.width /2)/(r.width /2))* 4.5;
             },{ passive:true });
             card.addEventListener('mouseleave', ()=>{ inside=false; tx=0; ty=0; });
-            (function loop(){
-                rx += (tx-rx)*0.08; ry += (ty-ry)*0.08;
-                card.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
+            (function loop() {
+                rx=lerp(rx,tx,.08); ry=lerp(ry,ty,.08);
+                const settled = Math.abs(rx)<.02 && Math.abs(ry)<.02 && !inside;
+                card.style.transform = settled ? '' :
+                    `perspective(1600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(${inside?-6:0}px)`;
                 requestAnimationFrame(loop);
             })();
         });
     })();
 
     /* ═════════════════════════════════════════════════════════
-       13. GALLERY / DRAG & DROP
+       13. GALLERY  (drag-and-drop + file picker + CONFIG + persist)
        ═════════════════════════════════════════════════════════ */
-    (function initGallery() {
-        const grid = $('#gallery-grid'), hintEl = $('#gallery-hint'), metaEl = $('#gallery-meta');
-        const fileInput = $('#gallery-upload'), clearBtn = $('#clear-gallery-btn');
-        if (!grid) return;
+    const galleryImages = [];
+    const GALLERY_KEY   = 'moonGallery_v2';
 
-        let galleryImages = [...(CONFIG.gallery || [])];
-        
-        // [FIX APPLIED] - Always safely prevent default on drag events to stop the browser from opening image files
-        document.addEventListener('dragover', e => {
-            e.preventDefault(); 
-            const ws = $('#welcome-screen');
-            if (!ws || !ws.classList.contains('fade-out')) return;
+    /* ── localStorage helpers ─────────────────────────────── */
+    function saveGallery() {
+        try {
+            localStorage.setItem(GALLERY_KEY, JSON.stringify(
+                galleryImages.map(({ src, caption }) => ({ src, caption, isBlob: false }))
+            ));
+        } catch (e) { console.warn('Gallery save failed (storage may be full):', e); }
+    }
+
+    function loadSavedGallery() {
+        try {
+            const raw = localStorage.getItem(GALLERY_KEY);
+            if (!raw) return;
+            JSON.parse(raw).forEach(item => galleryImages.push({ ...item, isBlob: false }));
+        } catch (e) { console.warn('Gallery load failed:', e); }
+    }
+
+    /* ── Spotlight ────────────────────────────────────────── */
+    let spotlightEl    = null;
+    let spotlightIdx   = 0;
+    let spotlightTimer = null;
+
+    function createSpotlight() {
+        if (spotlightEl) return;
+        spotlightEl = document.createElement('div');
+        spotlightEl.id = 'gallery-spotlight';
+        spotlightEl.style.display = 'none';
+        spotlightEl.innerHTML = `
+            <img class="spotlight-img" alt="Featured memory">
+            <div class="spotlight-overlay"></div>
+            <div class="spotlight-info">
+                <span class="spotlight-caption"></span>
+                <span class="spotlight-counter"></span>
+            </div>
+            <div class="spotlight-dots"></div>
+            <button class="spotlight-btn spotlight-prev" aria-label="Previous">&#8249;</button>
+            <button class="spotlight-btn spotlight-next" aria-label="Next">&#8250;</button>
+        `;
+        const dz = $('#drop-zone');
+        if (dz) dz.after(spotlightEl);
+
+        spotlightEl.addEventListener('click', e => {
+            if (e.target.closest('.spotlight-btn,.spotlight-dots')) return;
+            openLightboxAt(spotlightIdx);
         });
+        spotlightEl.querySelector('.spotlight-prev').addEventListener('click', e => {
+            e.stopPropagation();
+            goSpotlight(spotlightIdx - 1);
+            resetSpotlightTimer();
+        });
+        spotlightEl.querySelector('.spotlight-next').addEventListener('click', e => {
+            e.stopPropagation();
+            goSpotlight(spotlightIdx + 1);
+            resetSpotlightTimer();
+        });
+        spotlightEl.addEventListener('mouseenter', () => clearInterval(spotlightTimer));
+        spotlightEl.addEventListener('mouseleave', startSpotlightTimer);
+    }
 
-        document.addEventListener('drop', e => {
-            e.preventDefault(); 
+    function openLightboxAt(idx) {
+        // Creates a temporary gallery-item element that the existing lightbox click handler picks up
+        const tmp = document.createElement('div');
+        tmp.className = 'gallery-item';
+        tmp.dataset.index = idx;
+        tmp.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+        document.body.appendChild(tmp);
+        tmp.click();
+        setTimeout(() => tmp.remove(), 100);
+    }
+
+    function goSpotlight(idx) {
+        if (!spotlightEl || !galleryImages.length) return;
+        spotlightIdx = ((idx % galleryImages.length) + galleryImages.length) % galleryImages.length;
+        const item = galleryImages[spotlightIdx];
+        const img  = spotlightEl.querySelector('.spotlight-img');
+
+        img.style.opacity   = '0';
+        img.style.transform = 'scale(1.05)';
+
+        const show = () => { img.style.opacity = '1'; img.style.transform = 'scale(1)'; };
+        setTimeout(() => {
+            img.src = item.src;
+            if (img.complete && img.naturalWidth) show();
+            else img.onload = show;
+        }, 320);
+
+        const capEl = spotlightEl.querySelector('.spotlight-caption');
+        const numEl = spotlightEl.querySelector('.spotlight-counter');
+        if (capEl) capEl.textContent = item.caption || '';
+        if (numEl) numEl.textContent = galleryImages.length > 1 ? `${spotlightIdx + 1} / ${galleryImages.length}` : '';
+
+        $$('.spotlight-dot', spotlightEl).forEach((d, i) =>
+            d.classList.toggle('active', i === spotlightIdx));
+    }
+
+    function buildSpotlightDots() {
+        const dotsEl = spotlightEl ? spotlightEl.querySelector('.spotlight-dots') : null;
+        if (!dotsEl) return;
+        dotsEl.innerHTML = '';
+        // Only show dots for ≤ 18 photos
+        if (galleryImages.length <= 1 || galleryImages.length > 18) return;
+        galleryImages.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'spotlight-dot' + (i === spotlightIdx ? ' active' : '');
+            dot.setAttribute('aria-label', `Photo ${i + 1}`);
+            dot.addEventListener('click', e => { e.stopPropagation(); goSpotlight(i); resetSpotlightTimer(); });
+            dotsEl.appendChild(dot);
+        });
+    }
+
+    function startSpotlightTimer() {
+        clearInterval(spotlightTimer);
+        if (galleryImages.length <= 1) return;
+        spotlightTimer = setInterval(() => goSpotlight(spotlightIdx + 1), 5000);
+    }
+
+    function resetSpotlightTimer() { clearInterval(spotlightTimer); startSpotlightTimer(); }
+
+    function updateSpotlight() {
+        if (!spotlightEl) return;
+        if (!galleryImages.length) {
+            spotlightEl.style.display = 'none';
+            clearInterval(spotlightTimer);
+            return;
+        }
+        spotlightEl.style.display = '';
+        if (spotlightIdx >= galleryImages.length) spotlightIdx = 0;
+        goSpotlight(spotlightIdx);
+        buildSpotlightDots();
+        startSpotlightTimer();
+    }
+
+    /* ── Init ─────────────────────────────────────────────── */
+    (function initGallery() {
+        const grid      = $('#gallery-grid');
+        const dropZone  = $('#drop-zone');
+        const fileInput = $('#file-input');
+        const hintEl    = $('#gallery-hint');
+        const metaEl    = $('#gallery-meta');
+        const countEl   = $('#gallery-count');
+        const clearBtn  = $('#gallery-clear');
+        if (!grid || !dropZone) return;
+
+        // Spotlight container
+        createSpotlight();
+
+        // Load persisted images first
+        loadSavedGallery();
+
+        // Load CONFIG images only if nothing is saved
+        if (!galleryImages.length) {
+            (CONFIG.gallery || []).forEach(item =>
+                galleryImages.push({ src: item.src, caption: item.caption || '', isBlob: false })
+            );
+        }
+        if (galleryImages.length) renderGallery();
+
+        // Click to open picker
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+
+        // Drag events
+        let dragDepth = 0;
+        dropZone.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => { dragDepth--; if (dragDepth <= 0) { dragDepth = 0; dropZone.classList.remove('drag-over'); } });
+        dropZone.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+        dropZone.addEventListener('drop',      e => { e.preventDefault(); dragDepth = 0; dropZone.classList.remove('drag-over'); processFiles(e.dataTransfer.files); });
+
+        // Page-wide drop
+        document.addEventListener('dragover', e => {
             const ws = $('#welcome-screen');
             if (!ws || !ws.classList.contains('fade-out')) return;
-            if (e.target.closest('#drop-zone')) return; 
+            e.preventDefault();
+        });
+        document.addEventListener('drop', e => {
+            const ws = $('#welcome-screen');
+            if (!ws || !ws.classList.contains('fade-out')) return;
+            if (e.target.closest('#drop-zone')) return;
+            e.preventDefault();
             processFiles(e.dataTransfer.files);
         });
 
-        fileInput.addEventListener('change', () => {
-            processFiles(fileInput.files);
-            fileInput.value='';
-        });
+        fileInput.addEventListener('change', () => { processFiles(fileInput.files); fileInput.value = ''; });
 
         if (clearBtn) clearBtn.addEventListener('click', () => {
             galleryImages.forEach(img => { if (img.isBlob) URL.revokeObjectURL(img.src); });
             galleryImages.length = 0;
+            spotlightIdx = 0;
+            try { localStorage.removeItem(GALLERY_KEY); } catch (e) {}
             renderGallery();
         });
 
-        function processFiles(files) {
+        // Async processFiles — converts to base64 for persistence
+        async function processFiles(files) {
             const imgs = [...files].filter(f => f.type.startsWith('image/'));
             if (!imgs.length) return;
-            imgs.forEach(file => {
-                galleryImages.push({ src: URL.createObjectURL(file), caption: captionFromFilename(file.name), isBlob: true });
-            });
+            dropZone.classList.add('loading');
+            for (const file of imgs) {
+                const src = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload  = e => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                galleryImages.push({ src, caption: captionFromFilename(file.name), isBlob: false });
+            }
+            dropZone.classList.remove('loading');
+            saveGallery();
             renderGallery();
         }
 
         function renderGallery() {
             while (grid.firstChild) grid.removeChild(grid.firstChild);
             const count = galleryImages.length;
+
+            // Update spotlight
+            updateSpotlight();
+
             if (count === 0) {
                 grid.style.display = 'none';
                 if (hintEl) hintEl.style.display = 'none';
                 if (metaEl) metaEl.style.display = 'none';
-                buildLightboxThumbs(); return;
+                buildLightboxThumbs();
+                return;
             }
-            grid.style.display = 'grid';
-            grid.style.gridTemplateColumns = count === 1 ? '1fr' : count === 2 ? 'repeat(2,1fr)' : '';
+
+            grid.style.display = '';
+            grid.style.gridTemplateColumns = ''; // masonry handled by CSS
+
             const frag = document.createDocumentFragment();
             galleryImages.forEach((item, i) => {
                 const fig = document.createElement('figure');
                 fig.className = 'gallery-item';
                 fig.dataset.index = i;
+
                 const img = document.createElement('img');
                 img.src = item.src; img.alt = item.caption || 'Memory'; img.loading = 'lazy';
+
                 const cap = document.createElement('figcaption');
                 cap.textContent = item.caption || '';
+
                 fig.appendChild(img); fig.appendChild(cap); frag.appendChild(fig);
-                setTimeout(() => fig.classList.add('gallery-item-visible'), 40 + i * 55);
+                setTimeout(() => fig.classList.add('gallery-item-visible'), 40 + i * 45);
             });
             grid.appendChild(frag);
+
             if (hintEl) hintEl.style.display = '';
             if (metaEl) metaEl.style.display = 'flex';
-            if (count > 0 && metaEl) metaEl.querySelector('span').textContent = `${count} Memory${count !== 1 ? 's' : ''}`;
+            if (countEl) countEl.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
+
             buildLightboxThumbs();
         }
 
-        /* ─── Lightbox ────────────────────────────────────────── */
-        const box=$('#lightbox'), backdrop=$('#lightbox-backdrop');
-        const imgEl=$('#lightbox-img'), captionEl=$('#lightbox-caption');
-        const countEl=$('#lightbox-count'), thumbsEl=$('#lightbox-thumbs');
-        const btnPrev=$('#lightbox-prev'), btnNext=$('#lightbox-next'), closeBtn=$('#lightbox-close');
+        window._galleryImages = galleryImages;
+        window._renderGallery = renderGallery;
+    })();
+
+    /* ═════════════════════════════════════════════════════════
+       14. LIGHTBOX
+       ═════════════════════════════════════════════════════════ */
+    (function initLightbox() {
+        const box      = $('#lightbox');
+        const imgEl    = $('#lightbox-img');
+        const caption  = $('#lightbox-caption');
+        const backdrop = $('#lightbox-backdrop');
+        const closeBtn = $('#close-lightbox');
+        const btnPrev  = $('#lb-prev');
+        const btnNext  = $('#lb-next');
+        const thumbsEl = $('#lb-thumbs');
+        if (!box) return;
+
         let currentIdx = 0;
 
         function setImg(idx) {
-            if (galleryImages.length === 0) return;
-            currentIdx = (idx + galleryImages.length) % galleryImages.length;
+            if (!galleryImages.length) return;
+            currentIdx = ((idx % galleryImages.length) + galleryImages.length) % galleryImages.length;
             const item = galleryImages[currentIdx];
             imgEl.style.opacity = '0';
-            setTimeout(() => {
-                imgEl.src = item.src;
-                captionEl.textContent = item.caption || '';
-                countEl.textContent = `${currentIdx + 1} / ${galleryImages.length}`;
-                imgEl.onload = () => { imgEl.style.opacity = '1'; };
-            }, 150);
+            const pre = new Image();
+            pre.onload = () => { imgEl.src = item.src; requestAnimationFrame(() => requestAnimationFrame(() => { imgEl.style.opacity = '1'; })); };
+            pre.onerror = () => { imgEl.src = item.src; imgEl.style.opacity = '1'; };
+            pre.src = item.src;
+            if (caption) caption.textContent = item.caption || '';
+            const showNav = galleryImages.length > 1;
+            if (btnPrev) btnPrev.style.display = showNav ? '' : 'none';
+            if (btnNext) btnNext.style.display = showNav ? '' : 'none';
             if (thumbsEl) {
                 $$('.lb-thumb', thumbsEl).forEach((t,i) => t.classList.toggle('active', i===currentIdx));
                 const active = thumbsEl.querySelector('.lb-thumb.active');
@@ -680,14 +876,11 @@ const CONFIG = {
 
         function open(idx) {
             setImg(idx);
-            box.classList.add('open');
-            box.setAttribute('aria-hidden','false');
+            box.classList.add('open'); box.setAttribute('aria-hidden','false');
             document.body.style.overflow = 'hidden';
         }
-
         function close() {
-            box.classList.remove('open');
-            box.setAttribute('aria-hidden','true');
+            box.classList.remove('open'); box.setAttribute('aria-hidden','true');
             document.body.style.overflow = '';
             setTimeout(() => { imgEl.src = ''; imgEl.style.opacity = '0'; }, 550);
         }
@@ -699,10 +892,8 @@ const CONFIG = {
             thumbsEl.classList.add('has-thumbs');
             galleryImages.forEach((item,i) => {
                 const btn = document.createElement('button');
-                btn.className = 'lb-thumb';
-                btn.setAttribute('aria-label', `Photo ${i+1}`);
-                const img = document.createElement('img');
-                img.src = item.src; img.alt = ''; img.loading = 'lazy';
+                btn.className = 'lb-thumb'; btn.setAttribute('aria-label', `Photo ${i+1}`);
+                const img = document.createElement('img'); img.src = item.src; img.alt = ''; img.loading = 'lazy';
                 btn.appendChild(img);
                 btn.addEventListener('click', e => { e.stopPropagation(); setImg(i); });
                 thumbsEl.appendChild(btn);
@@ -711,89 +902,57 @@ const CONFIG = {
 
         document.addEventListener('click', e => {
             const item = e.target.closest('.gallery-item');
-            if (item) {
-                e.preventDefault(); e.stopPropagation();
-                const idx = parseInt(item.dataset.index,10);
-                open(isNaN(idx)?0:idx);
-            }
+            if (item) { e.preventDefault(); e.stopPropagation(); const idx = parseInt(item.dataset.index,10); open(isNaN(idx)?0:idx); }
         });
-
         if (btnPrev) btnPrev.addEventListener('click', e => { e.stopPropagation(); setImg(currentIdx-1); });
         if (btnNext) btnNext.addEventListener('click', e => { e.stopPropagation(); setImg(currentIdx+1); });
         backdrop.addEventListener('click', close);
         closeBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
-
         document.addEventListener('keydown', e => {
             if (!box.classList.contains('open')) return;
-            if (e.key==='Escape') close();
-            if (e.key==='ArrowLeft') setImg(currentIdx-1);
-            if (e.key==='ArrowRight') setImg(currentIdx+1);
+            if (e.key==='Escape')      close();
+            if (e.key==='ArrowLeft')   setImg(currentIdx-1);
+            if (e.key==='ArrowRight')  setImg(currentIdx+1);
         });
-
         let touchX = null;
         box.addEventListener('touchstart', e => { touchX=e.touches[0].clientX; },{ passive:true });
-        box.addEventListener('touchend', e => {
+        box.addEventListener('touchend',   e => {
             if (touchX===null) return;
-            const diff = touchX - e.changedTouches[0].clientX;
-            if (Math.abs(diff) > 40) setImg(currentIdx + (diff > 0 ? 1 : -1));
-            touchX = null;
-        });
-
-        renderGallery();
-    })();
-
-    /* ═════════════════════════════════════════════════════════
-       14. DRAG SCROLL
-       ═════════════════════════════════════════════════════════ */
-    (function initDragScroll() {
-        const lists = $$('.drag-scroll');
-        lists.forEach(list => {
-            let isDown=false, startX, scrollLeft;
-            list.addEventListener('mousedown', e=>{ isDown=true; list.classList.add('active'); startX=e.pageX-list.offsetLeft; scrollLeft=list.scrollLeft; });
-            list.addEventListener('mouseleave', ()=>{ isDown=false; list.classList.remove('active'); });
-            list.addEventListener('mouseup', ()=>{ isDown=false; list.classList.remove('active'); });
-            list.addEventListener('mousemove', e=>{
-                if (!isDown) return; e.preventDefault();
-                list.scrollLeft = scrollLeft - ((e.pageX-list.offsetLeft)-startX)*2;
-            });
+            const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+            if (Math.abs(dx) > 50) setImg(currentIdx + (dx<0?1:-1));
         });
     })();
 
     /* ═════════════════════════════════════════════════════════
-       15. COMPLIMENT TREE
+       15. BLOOM TREE
        ═════════════════════════════════════════════════════════ */
-    (function initTree() {
-        const btn = $('#tree-btn');
-        const fill = $('#tree-btn-fill');
-        const levelText = $('#tree-level-text');
-        const complText = $('#tree-compliment');
-        const treeSvg = $('#tree-svg');
-        const secret = $('#tree-secret-msg');
-        if (!btn || !treeSvg) return;
+    (function initBloom() {
+        const treeSvg  = $('#tree-svg');
+        const treeParts= $$('.tp', treeSvg);
+        const fill     = $('#water-fill');
+        const levelText= $('#water-count-text');
+        const complText= $('#compliment-text');
+        const btn      = $('#compliment-btn');
+        const secret   = $('#secret-message');
+        if (!btn) return;
 
-        let count = 0; const MAX = 6;
-        const treeParts = $$('.tree-part', treeSvg);
-
+        let count = 0; const MAX = 10;
         const compliments = [
-            "Your smile is honestly my favorite thing to look at.",
-            "I love how passionate you get about the things you care about.",
-            "You have this way of making everything feel calm when you're around.",
-            "I could listen to you talk for hours and never get bored.",
-            "There's a warmth to you that makes people want to stay.",
-            "You are so much stronger than you give yourself credit for.",
-            "The way your eyes light up when you're happy is incredible.",
-            "I admire how deeply you care for the people in your life.",
-            "You're not just beautiful on the outside; you're beautiful all the way through.",
-            "Just being near you makes my day better.",
-            "You always know exactly what to say to make me smile.",
-            "I feel incredibly lucky just to know you.",
-            "There is nobody else quite like you, and I mean that completely.",
+            "You've always been more than enough — I hope you know that.",
+            "There's no version of my day that doesn't get better when you're in it.",
+            "The way you care about things is one of my favourite things about you.",
+            "You have no idea how good it is talking to you. Like genuinely.",
+            "You are, without question, the funniest person I know.",
+            "Even the boring moments feel good with you in them.",
+            "I'm really glad I get to know you. Like actually really glad.",
+            "You make everything feel lighter. Even without trying.",
+            "There's nobody quite like you, and I mean that completely.",
             "The world is genuinely better with you in it. I mean that.",
         ];
 
         function updateTree(n) {
             treeParts.filter(el => parseInt(el.dataset.s,10) <= n && !el.classList.contains('show'))
-                .forEach((el,i) => setTimeout(() => el.classList.add('show'), i*55));
+                     .forEach((el,i) => setTimeout(() => el.classList.add('show'), i*55));
         }
 
         btn.addEventListener('click', () => {
@@ -802,13 +961,13 @@ const CONFIG = {
                 complText.textContent = compliments[randInt(0, compliments.length-1)];
                 complText.style.opacity = '1';
             }, 400);
-
             if (count >= MAX) return;
             count++;
             fill.style.width = (count/MAX*100) + '%'; fill.classList.add('active');
-            levelText.textContent = count < MAX ? `Moonlight Level ${count} / ${MAX}` : 'The Moon Tree is in Full Bloom ✦ 🌕';
+            levelText.textContent = count < MAX
+                ? `Moonlight Level  ${count} / ${MAX}`
+                : 'The Moon Tree is in Full Bloom ✦ 🌕';
             updateTree(count);
-
             if (count === MAX) {
                 treeSvg.classList.add('full-bloom');
                 secret.classList.add('revealed');
@@ -823,35 +982,54 @@ const CONFIG = {
        ═════════════════════════════════════════════════════════ */
     let typingDone = false;
     function startTypewriter() {
-        if (typingDone) return;
-        typingDone = true;
+        if (typingDone) return; typingDone = true;
         const lines = [
-            { id:'line-1', text:'Dear Moon,' },
-            { id:'line-2', text:"I made this for you because I wanted you to have something real — not a text, not a voice note. Something you can come back to. Something that just says: I see you, I care about you, and I am so glad you exist." },
-            { id:'line-3', text:"Take care of yourself out there. And whenever things get heavy, just know someone is rooting for you." },
-            { id:'line-4', text:"Always." },
-            { id:'line-sig', text:'— Me' }
+            { id:'line-1',   text:'Dear Moon,' },
+            { id:'line-2',   text:"I made this for you because I wanted you to have something real — not a text, not a voice note. Something you can come back to. Something that just says: I see you, and I think you're incredible." },
+            { id:'line-3',   text:"You make things feel lighter just by being around. That's not nothing. That's actually everything." },
+            { id:'line-4',   text:"No matter what, you will always be my cutest person. Even when things are hard, I'll be there." },
+            { id:'line-sig', text:'— Water ❤️' },
         ];
-
-        let delay = 0;
-        lines.forEach(line => {
-            const el = document.getElementById(line.id);
-            if (!el) return;
-            setTimeout(() => {
-                let charIdx = 0;
-                el.style.opacity = '1';
-                function typeChar() {
-                    if (charIdx < line.text.length) {
-                        el.textContent += line.text.charAt(charIdx);
-                        charIdx++;
-                        setTimeout(typeChar, randInt(25, 45));
-                    }
-                }
-                typeChar();
-            }, delay);
-            delay += (line.text.length * 40) + 600;
-        });
+        let li = 0, ci = 0;
+        function tick() {
+            if (li >= lines.length) return;
+            const el = document.getElementById(lines[li].id);
+            if (!el) { li++; ci=0; setTimeout(tick,10); return; }
+            const text = lines[li].text;
+            if (!el.classList.contains('typing-cursor')) el.classList.add('typing-cursor');
+            if (ci < text.length) { el.textContent += text[ci++]; setTimeout(tick, 28); }
+            else {
+                el.classList.remove('typing-cursor'); li++; ci=0;
+                setTimeout(tick, li < lines.length ? 500 : 0);
+            }
+        }
+        tick();
     }
+
+    /* ═════════════════════════════════════════════════════════
+       17. CLICK SPARKS
+       ═════════════════════════════════════════════════════════ */
+    (function initSparks() {
+        const syms = ['✦','✶','·','⋆','˚','🌙','°','*','♡'];
+        const cols = ['#e8c96a','#c4d8f5','#a0b8e8','#f0dfa0','#b0cce8','#f5c0d0'];
+        document.addEventListener('click', e => {
+            if (e.target.closest('button') || e.target.closest('.gallery-item') || e.target.closest('#drop-zone') || e.target.closest('#gallery-spotlight')) return;
+            const f = document.createDocumentFragment();
+            for (let i=0; i<9; i++) {
+                const el = document.createElement('div'); el.className = 'click-spark';
+                el.textContent = syms[randInt(0,syms.length-1)];
+                el.style.color = cols[randInt(0,cols.length-1)];
+                el.style.fontSize = rand(.6,1.15) + 'rem';
+                const angle=rand(0,Math.PI*2), vel=rand(28,72);
+                el.style.setProperty('--tx', Math.cos(angle)*vel+'px');
+                el.style.setProperty('--ty', Math.sin(angle)*vel-24+'px');
+                el.style.setProperty('--rot', rand(-70,70)+'deg');
+                el.style.left = e.clientX+'px'; el.style.top = e.clientY+'px';
+                f.appendChild(el); setTimeout(()=>el.remove(), 1000);
+            }
+            document.body.appendChild(f);
+        },{ passive:true });
+    })();
 
     /* ═════════════════════════════════════════════════════════
        18. MARRIAGE CERTIFICATE
