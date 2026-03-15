@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   MOON — script.js  ✦  Polish Edition
+   MOON — script.js
    ═══════════════════════════════════════════════════════════════ */
 
 const CONFIG = {
@@ -52,7 +52,6 @@ const CONFIG = {
         const msgEl = $('#bday-msg');
         if (!dEl) return;
         let prev = { d:-1, h:-1, m:-1, s:-1 };
-
         function getTarget() {
             const now = new Date();
             const y = (now.getMonth() > 3 || (now.getMonth() === 3 && now.getDate() > 21))
@@ -60,7 +59,6 @@ const CONFIG = {
             return new Date(y, 3, 21, 0, 0, 0, 0);
         }
         const pad = n => String(n).padStart(2, '0');
-
         function bump(el, val, key) {
             if (prev[key] !== val) {
                 el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
@@ -68,7 +66,6 @@ const CONFIG = {
             }
             el.textContent = pad(val);
         }
-
         const bdayLines = [
             "Today's the day. Happy birthday, Moon. 🎂",
             "21 years of you and the world is better for it. 🌙",
@@ -76,7 +73,6 @@ const CONFIG = {
             "Happy birthday. I hope today feels as good as you make me feel. 🌕",
         ];
         let bdayIdx = 0;
-
         function tick() {
             const diff = getTarget() - new Date();
             if (diff <= 0) {
@@ -112,9 +108,7 @@ const CONFIG = {
         const hoursEl = $('#tog-hours');
         const minsEl  = $('#tog-mins');
         if (!daysEl) return;
-
         const start = new Date(CONFIG.startDate || '2024-01-01');
-
         function animateCount(el, target, duration) {
             const t0 = performance.now();
             (function step(now) {
@@ -125,29 +119,22 @@ const CONFIG = {
                 else el.textContent = fmtNum(target);
             })(performance.now());
         }
-
         let animated = false;
         function compute() {
             const diff = new Date() - start;
-            return {
-                days:  Math.floor(diff / 86400000),
-                hours: Math.floor(diff / 3600000),
-                mins:  Math.floor(diff / 60000),
-            };
+            return { days: Math.floor(diff/86400000), hours: Math.floor(diff/3600000), mins: Math.floor(diff/60000) };
         }
-
         const card = $('#together-card');
         if (card) {
             new IntersectionObserver(entries => {
                 if (!entries[0].isIntersecting || animated) return;
                 animated = true;
                 const { days, hours, mins } = compute();
-                animateCount(daysEl,  days,  1200);
+                animateCount(daysEl, days, 1200);
                 animateCount(hoursEl, hours, 1500);
-                animateCount(minsEl,  mins,  1800);
+                animateCount(minsEl, mins, 1800);
             }, { threshold: 0.2 }).observe(card);
         }
-
         setInterval(() => {
             if (!animated) return;
             const { days, hours, mins } = compute();
@@ -350,22 +337,16 @@ const CONFIG = {
         const btnNext   = $('#btn-next');
         const btnShuffle= $('#btn-shuffle');
         if (!music||!musicBtn) return;
-
         const songs = CONFIG.playlist||[];
         if (!songs.length) return;
-
         let order=songs.map((_,i)=>i), cursor=0, playing=false, shuffled=false;
-
         function buildOrder(fromIndex) {
             order = shuffled ? shuffle(songs.map((_,i)=>i)) : songs.map((_,i)=>i);
-            if (fromIndex !== undefined) {
-                const pos = order.indexOf(fromIndex);
-                cursor = pos !== -1 ? pos : 0;
-            }
+            if (fromIndex !== undefined) { const pos = order.indexOf(fromIndex); cursor = pos !== -1 ? pos : 0; }
         }
         function updateUI() {
             const song = songs[order[cursor]];
-            if (trackName) trackName.textContent = song ? song.title : '–';
+            if (trackName) trackName.textContent = song ? song.title : '-';
             if (trackNum)  trackNum.textContent  = songs.length > 1 ? `${cursor+1} / ${songs.length}` : '';
             if (btnShuffle) btnShuffle.classList.toggle('active', shuffled);
         }
@@ -382,11 +363,7 @@ const CONFIG = {
             music.play().then(()=>{ fade(music,0.5,1800); playing=true; musicIcon.textContent='⏸️'; if(musicLbl) musicLbl.textContent='Pause'; }).catch(()=>{});
             updateUI();
         }
-        music.addEventListener('ended',()=>{
-            cursor=(cursor+1)%order.length;
-            if (cursor===0&&shuffled) buildOrder();
-            loadAndPlay(cursor);
-        });
+        music.addEventListener('ended',()=>{ cursor=(cursor+1)%order.length; if(cursor===0&&shuffled) buildOrder(); loadAndPlay(cursor); });
         musicBtn.addEventListener('click',()=>{
             setupAudio(music);
             if (playing) { fade(music,0,1200); musicIcon.textContent='🎵'; if(musicLbl) musicLbl.textContent='Our Song'; }
@@ -398,14 +375,11 @@ const CONFIG = {
         });
         if (btnPrev) btnPrev.addEventListener('click',()=>{ setupAudio(music); cursor=(cursor-1+order.length)%order.length; loadAndPlay(cursor); });
         if (btnNext) btnNext.addEventListener('click',()=>{ setupAudio(music); cursor=(cursor+1)%order.length; loadAndPlay(cursor); });
-        if (btnShuffle) btnShuffle.addEventListener('click',()=>{
-            shuffled=!shuffled; const cur=order[cursor]; buildOrder(cur); updateUI();
-        });
+        if (btnShuffle) btnShuffle.addEventListener('click',()=>{ shuffled=!shuffled; const cur=order[cursor]; buildOrder(cur); updateUI(); });
         buildOrder(); updateUI();
         window._startMusic = () => { setupAudio(music); loadAndPlay(shuffled ? randInt(0,order.length-1) : 0); };
     })();
 
-    /* ── Ring Visualizer ────────────────────────────────── */
     (function initRingViz() {
         const rc=$('#music-ring-canvas'); if (!rc) return;
         const ctx=rc.getContext('2d'); const S=110; rc.width=rc.height=S;
@@ -429,7 +403,6 @@ const CONFIG = {
         })();
     })();
 
-    /* ── Horizon Visualizer ─────────────────────────────── */
     (function initHorizonViz() {
         const canvas=$('#viz-canvas'); if (!canvas) return;
         const ctx=canvas.getContext('2d');
@@ -530,18 +503,16 @@ const CONFIG = {
     })();
 
     /* ═══════════════════════════════════════════════════════
-       12. 3D TILT
+       12. 3D TILT  (disabled on memories card)
     ═══════════════════════════════════════════════════════ */
     (function initTilt() {
         if (window.matchMedia('(max-width: 768px)').matches) return;
         $$('.tilt-card').forEach(card => {
-            // Skip tilt on the memories card — it gets too tall with many photos
-            if (card.id === 'memories-card') return;
+            if (card.id === 'memories-card') return; // too tall with many photos
             let rx=0, ry=0, tx=0, ty=0, inside=false;
             card.addEventListener('mouseenter', ()=>{ inside=true; });
             card.addEventListener('mousemove', e=>{
                 const r=card.getBoundingClientRect();
-                // Use viewport-relative mouse position, capped to ±1 so tall cards don't go extreme
                 const normX = clamp((e.clientY - r.top   - r.height/2) / (r.height/2), -1, 1);
                 const normY = clamp((e.clientX - r.left  - r.width /2) / (r.width /2), -1, 1);
                 tx = normX * -3.5;
@@ -560,27 +531,21 @@ const CONFIG = {
 
     /* ═══════════════════════════════════════════════════════
        13. GALLERY
-       ─────────────────────────────────────────────────────
-       Architecture (fixed):
-         • GALLERY_DATA  = static photos from generate-gallery.ps1
-                          always loaded, never stored in localStorage
-         • userUploads   = drag-and-drop additions (base64)
-                          saved to localStorage, appended after static photos
-         • galleryImages = GALLERY_DATA + userUploads  (combined at runtime)
+       Architecture:
+         GALLERY_DATA  = static photos (generate-gallery.ps1), always loaded
+         userUploads   = drag-and-drop base64, saved to localStorage
+         galleryImages = GALLERY_DATA + userUploads combined at runtime
     ═══════════════════════════════════════════════════════ */
     const galleryImages = [];
-    const UPLOADS_KEY   = 'moonUploads_v1'; // only stores user drag-and-drop base64
+    const UPLOADS_KEY   = 'moonUploads_v1';
 
-    /* ── FIX 1: localStorage only stores user uploads, not GALLERY_DATA ── */
     function saveUserUploads() {
         try {
             const uploads = galleryImages.filter(img => img.isUpload);
             localStorage.setItem(UPLOADS_KEY, JSON.stringify(
                 uploads.map(({ src, caption }) => ({ src, caption, isUpload: true }))
             ));
-        } catch (e) {
-            console.warn('Could not save uploads (storage may be full):', e);
-        }
+        } catch (e) { console.warn('Could not save uploads:', e); }
     }
 
     function loadUserUploads() {
@@ -590,10 +555,10 @@ const CONFIG = {
             JSON.parse(raw).forEach(item =>
                 galleryImages.push({ src: item.src, caption: item.caption || '', isUpload: true })
             );
-        } catch (e) { console.warn('Could not load saved uploads:', e); }
+        } catch (e) { console.warn('Could not load uploads:', e); }
     }
 
-    /* ── Spotlight ────────────────────────────────────────── */
+    /* ── Spotlight carousel ───────────────────────────────── */
     let spotlightEl    = null;
     let spotlightIdx   = 0;
     let spotlightTimer = null;
@@ -619,7 +584,7 @@ const CONFIG = {
 
         spotlightEl.addEventListener('click', e => {
             if (e.target.closest('.spotlight-btn,.spotlight-dots')) return;
-            openLightboxAt(spotlightIdx);
+            openLightbox(spotlightIdx);
         });
         spotlightEl.querySelector('.spotlight-prev').addEventListener('click', e => {
             e.stopPropagation(); goSpotlight(spotlightIdx - 1); resetSpotlightTimer();
@@ -631,28 +596,11 @@ const CONFIG = {
         spotlightEl.addEventListener('mouseleave', startSpotlightTimer);
     }
 
-    function openLightboxAt(idx) {
-        const tmp = document.createElement('div');
-        tmp.className = 'gallery-item';
-        tmp.dataset.index = idx;
-        tmp.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
-        document.body.appendChild(tmp);
-        tmp.click();
-        setTimeout(() => tmp.remove(), 100);
-    }
-
-    /* ── FIX 5: spotlight image show — handle cached images correctly ── */
     function showSpotlightImage(imgEl, src) {
-        imgEl.style.opacity   = '0';
-        imgEl.style.transform = 'scale(1.05)';
-        const reveal = () => {
-            imgEl.style.opacity   = '1';
-            imgEl.style.transform = 'scale(1)';
-        };
-        imgEl.onload  = reveal;
-        imgEl.onerror = reveal; // show broken image rather than staying hidden
-        imgEl.src     = src;
-        // If already cached and complete, fire reveal immediately
+        imgEl.style.opacity = '0'; imgEl.style.transform = 'scale(1.05)';
+        const reveal = () => { imgEl.style.opacity = '1'; imgEl.style.transform = 'scale(1)'; };
+        imgEl.onload = reveal; imgEl.onerror = reveal;
+        imgEl.src = src;
         if (imgEl.complete && imgEl.naturalWidth) reveal();
     }
 
@@ -661,16 +609,12 @@ const CONFIG = {
         spotlightIdx = ((idx % galleryImages.length) + galleryImages.length) % galleryImages.length;
         const item = galleryImages[spotlightIdx];
         const img  = spotlightEl.querySelector('.spotlight-img');
-
         setTimeout(() => showSpotlightImage(img, item.src), 60);
-
         const capEl = spotlightEl.querySelector('.spotlight-caption');
         const numEl = spotlightEl.querySelector('.spotlight-counter');
         if (capEl) capEl.textContent = item.caption || '';
         if (numEl) numEl.textContent = galleryImages.length > 1 ? `${spotlightIdx + 1} / ${galleryImages.length}` : '';
-
-        $$('.spotlight-dot', spotlightEl).forEach((d, i) =>
-            d.classList.toggle('active', i === spotlightIdx));
+        $$('.spotlight-dot', spotlightEl).forEach((d, i) => d.classList.toggle('active', i === spotlightIdx));
     }
 
     function buildSpotlightDots() {
@@ -697,11 +641,7 @@ const CONFIG = {
 
     function updateSpotlight() {
         if (!spotlightEl) return;
-        if (!galleryImages.length) {
-            spotlightEl.style.display = 'none';
-            clearInterval(spotlightTimer);
-            return;
-        }
+        if (!galleryImages.length) { spotlightEl.style.display = 'none'; clearInterval(spotlightTimer); return; }
         spotlightEl.style.display = '';
         if (spotlightIdx >= galleryImages.length) spotlightIdx = 0;
         goSpotlight(spotlightIdx);
@@ -709,7 +649,7 @@ const CONFIG = {
         startSpotlightTimer();
     }
 
-    /* ── Init ─────────────────────────────────────────────── */
+    /* ── Gallery init ─────────────────────────────────────── */
     (function initGallery() {
         const grid      = $('#gallery-grid');
         const dropZone  = $('#drop-zone');
@@ -722,27 +662,25 @@ const CONFIG = {
 
         createSpotlight();
 
-        /* ── FIX 1 & 2: GALLERY_DATA always loads first, unconditionally ── */
+        // GALLERY_DATA always loads first, unconditionally
         const staticSource = window.GALLERY_DATA || CONFIG.gallery || [];
         staticSource.forEach(item =>
             galleryImages.push({ src: item.src, caption: item.caption || '', isUpload: false })
         );
 
-        /* ── Then append any user drag-and-drop uploads from localStorage ── */
+        // Then append user drag-and-drop uploads
         loadUserUploads();
 
         if (galleryImages.length) renderGallery();
 
-        // Click / keyboard to open picker
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
 
-        // Drag events
         let dragDepth = 0;
         dropZone.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => { dragDepth--; if (dragDepth <= 0) { dragDepth = 0; dropZone.classList.remove('drag-over'); } });
+        dropZone.addEventListener('dragleave', () => { dragDepth--; if (dragDepth <= 0) { dragDepth=0; dropZone.classList.remove('drag-over'); } });
         dropZone.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
-        dropZone.addEventListener('drop',      e => { e.preventDefault(); dragDepth = 0; dropZone.classList.remove('drag-over'); processFiles(e.dataTransfer.files); });
+        dropZone.addEventListener('drop',      e => { e.preventDefault(); dragDepth=0; dropZone.classList.remove('drag-over'); processFiles(e.dataTransfer.files); });
 
         document.addEventListener('dragover', e => {
             const ws = $('#welcome-screen');
@@ -759,9 +697,8 @@ const CONFIG = {
 
         fileInput.addEventListener('change', () => { processFiles(fileInput.files); fileInput.value = ''; });
 
-        /* ── FIX 3: Clear only removes user uploads; GALLERY_DATA stays ── */
+        // Clear only removes user uploads; GALLERY_DATA stays
         if (clearBtn) clearBtn.addEventListener('click', () => {
-            // Remove only uploads, keep static photos
             for (let i = galleryImages.length - 1; i >= 0; i--) {
                 if (galleryImages[i].isUpload) galleryImages.splice(i, 1);
             }
@@ -791,32 +728,27 @@ const CONFIG = {
         function renderGallery() {
             while (grid.firstChild) grid.removeChild(grid.firstChild);
             const count = galleryImages.length;
-
             updateSpotlight();
 
             if (count === 0) {
                 grid.style.display = 'none';
                 if (hintEl) hintEl.style.display = 'none';
                 if (metaEl) metaEl.style.display = 'none';
-                buildLightboxThumbs();
+                // FIX: use window.buildLightboxThumbs — it's defined later in initLightbox
+                if (window.buildLightboxThumbs) window.buildLightboxThumbs();
                 return;
             }
 
             grid.style.display = '';
-            grid.style.gridTemplateColumns = '';
-
             const frag = document.createDocumentFragment();
             galleryImages.forEach((item, i) => {
                 const fig = document.createElement('figure');
                 fig.className = 'gallery-item';
                 fig.dataset.index = i;
-
                 const img = document.createElement('img');
                 img.src = item.src; img.alt = item.caption || 'Memory'; img.loading = 'lazy';
-
                 const cap = document.createElement('figcaption');
                 cap.textContent = item.caption || '';
-
                 fig.appendChild(img); fig.appendChild(cap); frag.appendChild(fig);
                 setTimeout(() => fig.classList.add('gallery-item-visible'), 40 + i * 45);
             });
@@ -826,7 +758,8 @@ const CONFIG = {
             if (metaEl) metaEl.style.display = 'flex';
             if (countEl) countEl.textContent = `${count} photo${count !== 1 ? 's' : ''}`;
 
-            buildLightboxThumbs();
+            // FIX: use window.buildLightboxThumbs — defined later, safe to call via window
+            if (window.buildLightboxThumbs) window.buildLightboxThumbs();
         }
 
         window._galleryImages = galleryImages;
@@ -834,7 +767,7 @@ const CONFIG = {
     })();
 
     /* ═══════════════════════════════════════════════════════
-       14. LIGHTBOX  (with zoom + pan)
+       14. LIGHTBOX — click to open full picture, scroll/pinch to zoom
     ═══════════════════════════════════════════════════════ */
     (function initLightbox() {
         const box      = $('#lightbox');
@@ -846,68 +779,55 @@ const CONFIG = {
         const btnPrev  = $('#lb-prev');
         const btnNext  = $('#lb-next');
         const thumbsEl = $('#lb-thumbs');
-        const zoomHint = $('#lb-zoom-hint');
         if (!box) return;
-        let hintTimer  = null;
-        function showZoomHint() {
-            if (!zoomHint) return;
-            zoomHint.classList.add('visible');
-            clearTimeout(hintTimer);
-            hintTimer = setTimeout(() => zoomHint.classList.remove('visible'), 3000);
-        }
 
         let currentIdx = 0;
 
-        /* ── Zoom state ─────────────────────────────────── */
-        let scale    = 1;
-        let panX     = 0;
-        let panY     = 0;
-        let dragging = false;
-        let dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
-        const MIN_SCALE = 1, MAX_SCALE = 5;
+        /* ── Zoom/pan state ─────────────────────────────────── */
+        let scale = 1, panX = 0, panY = 0;
+        let dragging = false, dragSX = 0, dragSY = 0, panSX = 0, panSY = 0;
+        const MIN_SCALE = 1, MAX_SCALE = 6;
 
-        function applyTransform(animate) {
-            imgEl.style.transition = animate ? 'transform .25s ease' : 'none';
-            imgEl.style.transform  = `translate(${panX}px, ${panY}px) scale(${scale})`;
-            // Cursor feedback
-            imgEl.style.cursor = scale > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in';
-            // Hide nav arrows when zoomed in
+        function applyTransform(animated) {
+            imgEl.style.transition = animated ? 'transform .25s ease' : 'none';
+            imgEl.style.transform  = `translate(${panX}px,${panY}px) scale(${scale})`;
+            imgEl.style.cursor     = scale > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in';
             const showNav = galleryImages.length > 1 && scale <= 1;
-            if (btnPrev) btnPrev.style.visibility = showNav ? 'visible' : 'hidden';
-            if (btnNext) btnNext.style.visibility = showNav ? 'visible' : 'hidden';
+            if (btnPrev) btnPrev.style.opacity = showNav ? '' : '0';
+            if (btnNext) btnNext.style.opacity = showNav ? '' : '0';
+            if (btnPrev) btnPrev.style.pointerEvents = showNav ? '' : 'none';
+            if (btnNext) btnNext.style.pointerEvents = showNav ? '' : 'none';
         }
 
-        function resetZoom(animate) {
+        function resetZoom(animated) {
             scale = 1; panX = 0; panY = 0;
-            applyTransform(animate);
+            applyTransform(animated);
         }
 
         function clampPan() {
             if (scale <= 1) { panX = 0; panY = 0; return; }
-            const r   = imgEl.getBoundingClientRect();
-            const ww  = window.innerWidth, wh = window.innerHeight;
-            const maxX = Math.max(0, (r.width  - ww) / 2);
-            const maxY = Math.max(0, (r.height - wh) / 2);
+            const r = imgEl.getBoundingClientRect();
+            const maxX = Math.max(0, (r.width  - window.innerWidth)  / 2);
+            const maxY = Math.max(0, (r.height - window.innerHeight) / 2);
             panX = clamp(panX, -maxX, maxX);
             panY = clamp(panY, -maxY, maxY);
         }
 
-        function zoomAt(newScale, clientX, clientY) {
+        function zoomAt(newScale, cx, cy) {
             newScale = clamp(newScale, MIN_SCALE, MAX_SCALE);
-            // Keep the point under the cursor fixed
-            const rect    = imgEl.getBoundingClientRect();
-            const originX = clientX - (rect.left + rect.width  / 2);
-            const originY = clientY - (rect.top  + rect.height / 2);
-            const factor  = newScale / scale;
-            panX = panX * factor + originX * (1 - factor);
-            panY = panY * factor + originY * (1 - factor);
+            const rect  = imgEl.getBoundingClientRect();
+            const ox    = cx - (rect.left + rect.width  / 2);
+            const oy    = cy - (rect.top  + rect.height / 2);
+            const ratio = newScale / scale;
+            panX = panX * ratio + ox * (1 - ratio);
+            panY = panY * ratio + oy * (1 - ratio);
             scale = newScale;
             clampPan();
             applyTransform(false);
         }
 
-        /* ── Image load ─────────────────────────────────── */
-        function setImg(idx) {
+        /* ── Load image ─────────────────────────────────────── */
+        function loadImage(idx) {
             if (!galleryImages.length) return;
             currentIdx = ((idx % galleryImages.length) + galleryImages.length) % galleryImages.length;
             const item = galleryImages[currentIdx];
@@ -919,8 +839,8 @@ const CONFIG = {
             if (imgEl.complete && imgEl.naturalWidth) imgEl.style.opacity = '1';
             if (caption) caption.textContent = item.caption || '';
             const showNav = galleryImages.length > 1;
-            if (btnPrev) { btnPrev.style.display = showNav ? '' : 'none'; btnPrev.style.visibility = 'visible'; }
-            if (btnNext) { btnNext.style.display = showNav ? '' : 'none'; btnNext.style.visibility = 'visible'; }
+            if (btnPrev) { btnPrev.style.display = showNav ? '' : 'none'; btnPrev.style.opacity = ''; btnPrev.style.pointerEvents = ''; }
+            if (btnNext) { btnNext.style.display = showNav ? '' : 'none'; btnNext.style.opacity = ''; btnNext.style.pointerEvents = ''; }
             if (thumbsEl) {
                 $$('.lb-thumb', thumbsEl).forEach((t,i) => t.classList.toggle('active', i===currentIdx));
                 const active = thumbsEl.querySelector('.lb-thumb.active');
@@ -928,133 +848,115 @@ const CONFIG = {
             }
         }
 
-        function open(idx) {
-            setImg(idx);
+        /* ── Open / close ───────────────────────────────────── */
+        function openLightbox(idx) {
+            loadImage(idx);
             box.classList.add('open'); box.setAttribute('aria-hidden','false');
             document.body.style.overflow = 'hidden';
-            setTimeout(showZoomHint, 600);
         }
+        window.openLightbox = openLightbox; // used by spotlight
+
         function close() {
             resetZoom(false);
-            clearTimeout(hintTimer);
-            if (zoomHint) zoomHint.classList.remove('visible');
             box.classList.remove('open'); box.setAttribute('aria-hidden','true');
             document.body.style.overflow = '';
-            setTimeout(() => { imgEl.src = ''; imgEl.style.opacity = '0'; }, 550);
+            setTimeout(() => { imgEl.src = ''; imgEl.style.opacity = '0'; }, 500);
         }
 
-        /* ── Scroll wheel zoom ──────────────────────────── */
+        /* ── Scroll wheel zoom ──────────────────────────────── */
         imgWrap.addEventListener('wheel', e => {
+            if (!box.classList.contains('open')) return;
             e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.85 : 1.18;
-            zoomAt(scale * delta, e.clientX, e.clientY);
+            zoomAt(scale * (e.deltaY > 0 ? 0.85 : 1.18), e.clientX, e.clientY);
         }, { passive: false });
 
-        /* ── Double-click to toggle zoom ────────────────── */
+        /* ── Double-click zoom toggle ───────────────────────── */
         imgEl.addEventListener('dblclick', e => {
             e.stopPropagation();
-            if (scale > 1.2) { resetZoom(true); }
-            else             { zoomAt(2.5, e.clientX, e.clientY); applyTransform(true); }
+            if (scale > 1.2) resetZoom(true);
+            else { zoomAt(2.5, e.clientX, e.clientY); applyTransform(true); }
         });
 
-        /* ── Mouse drag to pan ──────────────────────────── */
+        /* ── Mouse drag to pan ──────────────────────────────── */
         imgEl.addEventListener('mousedown', e => {
             if (scale <= 1) return;
             e.preventDefault();
-            dragging = true;
-            dragStartX = e.clientX; dragStartY = e.clientY;
-            panStartX  = panX;      panStartY  = panY;
+            dragging = true; dragSX = e.clientX; dragSY = e.clientY; panSX = panX; panSY = panY;
             applyTransform(false);
         });
         window.addEventListener('mousemove', e => {
             if (!dragging) return;
-            panX = panStartX + (e.clientX - dragStartX);
-            panY = panStartY + (e.clientY - dragStartY);
-            clampPan();
-            applyTransform(false);
+            panX = panSX + (e.clientX - dragSX);
+            panY = panSY + (e.clientY - dragSY);
+            clampPan(); applyTransform(false);
         });
-        window.addEventListener('mouseup', () => {
-            if (!dragging) return;
-            dragging = false;
-            applyTransform(false);
-        });
+        window.addEventListener('mouseup', () => { if (!dragging) return; dragging = false; applyTransform(false); });
 
-        /* ── Touch: swipe to navigate OR pinch to zoom ── */
-        let touch1 = null, touch2 = null, pinchStartDist = 0, pinchStartScale = 1;
-        let touchSwipeX = null, touchSwipeY = null;
+        /* ── Touch: pinch zoom + swipe navigate ─────────────── */
+        let t1=null, t2=null, pinchDist0=1, pinchScale0=1, swipeX=null, swipeY=null;
 
         box.addEventListener('touchstart', e => {
             if (e.touches.length === 1) {
-                touch1 = e.touches[0];
-                touchSwipeX = touch1.clientX;
-                touchSwipeY = touch1.clientY;
-                if (scale > 1) {
-                    dragStartX = touch1.clientX; dragStartY = touch1.clientY;
-                    panStartX  = panX;           panStartY  = panY;
-                    dragging   = true;
-                }
+                t1 = e.touches[0]; swipeX = t1.clientX; swipeY = t1.clientY;
+                if (scale > 1) { dragging=true; dragSX=t1.clientX; dragSY=t1.clientY; panSX=panX; panSY=panY; }
             } else if (e.touches.length === 2) {
-                dragging = false;
-                touch1 = e.touches[0]; touch2 = e.touches[1];
-                pinchStartDist  = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-                pinchStartScale = scale;
-                touchSwipeX = null;
+                dragging=false; t1=e.touches[0]; t2=e.touches[1];
+                pinchDist0  = Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+                pinchScale0 = scale; swipeX = null;
             }
-        }, { passive: true });
+        }, { passive:true });
 
         box.addEventListener('touchmove', e => {
             if (e.touches.length === 2) {
                 e.preventDefault();
-                const t1 = e.touches[0], t2 = e.touches[1];
-                const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-                const midX = (t1.clientX + t2.clientX) / 2;
-                const midY = (t1.clientY + t2.clientY) / 2;
-                zoomAt(pinchStartScale * (dist / pinchStartDist), midX, midY);
+                const a=e.touches[0], b=e.touches[1];
+                const dist = Math.hypot(b.clientX-a.clientX, b.clientY-a.clientY);
+                zoomAt(pinchScale0 * (dist/pinchDist0), (a.clientX+b.clientX)/2, (a.clientY+b.clientY)/2);
             } else if (e.touches.length === 1 && dragging) {
                 e.preventDefault();
-                panX = panStartX + (e.touches[0].clientX - dragStartX);
-                panY = panStartY + (e.touches[0].clientY - dragStartY);
-                clampPan();
-                applyTransform(false);
+                panX = panSX + (e.touches[0].clientX - dragSX);
+                panY = panSY + (e.touches[0].clientY - dragSY);
+                clampPan(); applyTransform(false);
             }
-        }, { passive: false });
+        }, { passive:false });
 
         box.addEventListener('touchend', e => {
             dragging = false;
-            if (e.touches.length < 2) { touch2 = null; }
-            // Swipe to navigate only when not zoomed
-            if (touchSwipeX !== null && scale <= 1 && e.changedTouches.length === 1) {
-                const dx = e.changedTouches[0].clientX - touchSwipeX;
-                const dy = Math.abs(e.changedTouches[0].clientY - touchSwipeY);
-                if (Math.abs(dx) > 50 && dy < 60) setImg(currentIdx + (dx < 0 ? 1 : -1));
+            if (e.touches.length < 2) t2 = null;
+            if (swipeX !== null && scale <= 1 && e.changedTouches.length === 1) {
+                const dx = e.changedTouches[0].clientX - swipeX;
+                const dy = Math.abs(e.changedTouches[0].clientY - swipeY);
+                if (Math.abs(dx) > 50 && dy < 60) loadImage(currentIdx + (dx < 0 ? 1 : -1));
             }
-            touchSwipeX = null;
+            swipeX = null;
         });
 
-        /* ── Keyboard ───────────────────────────────────── */
+        /* ── Keyboard ───────────────────────────────────────── */
         document.addEventListener('keydown', e => {
             if (!box.classList.contains('open')) return;
-            if (e.key === 'Escape')      { if (scale > 1) resetZoom(true); else close(); }
-            if (e.key === 'ArrowLeft'  && scale <= 1) setImg(currentIdx - 1);
-            if (e.key === 'ArrowRight' && scale <= 1) setImg(currentIdx + 1);
-            if (e.key === '+'  || e.key === '=') zoomAt(scale * 1.3, window.innerWidth/2, window.innerHeight/2);
-            if (e.key === '-')                   zoomAt(scale / 1.3, window.innerWidth/2, window.innerHeight/2);
-            if (e.key === '0')                   resetZoom(true);
+            if (e.key === 'Escape')     { if (scale > 1) resetZoom(true); else close(); }
+            if (e.key === 'ArrowLeft'  && scale <= 1) loadImage(currentIdx - 1);
+            if (e.key === 'ArrowRight' && scale <= 1) loadImage(currentIdx + 1);
+            if (e.key === '+' || e.key === '=') zoomAt(scale*1.3, window.innerWidth/2, window.innerHeight/2);
+            if (e.key === '-')                  zoomAt(scale/1.3, window.innerWidth/2, window.innerHeight/2);
+            if (e.key === '0')                  resetZoom(true);
         });
 
-        /* ── Backdrop click ─────────────────────────────── */
         backdrop.addEventListener('click', () => { if (scale > 1) resetZoom(true); else close(); });
         closeBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
-        if (btnPrev) btnPrev.addEventListener('click', e => { e.stopPropagation(); setImg(currentIdx-1); });
-        if (btnNext) btnNext.addEventListener('click', e => { e.stopPropagation(); setImg(currentIdx+1); });
+        if (btnPrev) btnPrev.addEventListener('click', e => { e.stopPropagation(); loadImage(currentIdx-1); });
+        if (btnNext) btnNext.addEventListener('click', e => { e.stopPropagation(); loadImage(currentIdx+1); });
 
-        /* ── Gallery click to open ──────────────────────── */
+        /* ── Gallery item click ─────────────────────────────── */
         document.addEventListener('click', e => {
             const item = e.target.closest('.gallery-item');
-            if (item) { e.preventDefault(); e.stopPropagation(); const idx = parseInt(item.dataset.index,10); open(isNaN(idx)?0:idx); }
+            if (!item) return;
+            e.preventDefault(); e.stopPropagation();
+            const idx = parseInt(item.dataset.index, 10);
+            openLightbox(isNaN(idx) ? 0 : idx);
         });
 
-        /* ── Lightbox thumbs ────────────────────────────── */
+        /* ── Thumbnail strip — NOW defined BEFORE renderGallery could call it ── */
         window.buildLightboxThumbs = function () {
             if (!thumbsEl) return;
             while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
@@ -1065,10 +967,13 @@ const CONFIG = {
                 btn.className = 'lb-thumb'; btn.setAttribute('aria-label', `Photo ${i+1}`);
                 const img = document.createElement('img'); img.src = item.src; img.alt = ''; img.loading = 'lazy';
                 btn.appendChild(img);
-                btn.addEventListener('click', e => { e.stopPropagation(); setImg(i); });
+                btn.addEventListener('click', e => { e.stopPropagation(); loadImage(i); });
                 thumbsEl.appendChild(btn);
             });
         };
+
+        // Build thumbs now for any photos already loaded
+        window.buildLightboxThumbs();
     })();
 
     /* ═══════════════════════════════════════════════════════
@@ -1083,7 +988,6 @@ const CONFIG = {
         const btn      = $('#compliment-btn');
         const secret   = $('#secret-message');
         if (!btn) return;
-
         let count = 0; const MAX = 10;
         const compliments = [
             "You've always been more than enough — I hope you know that.",
@@ -1097,24 +1001,17 @@ const CONFIG = {
             "There's nobody quite like you, and I mean that completely.",
             "The world is genuinely better with you in it. I mean that.",
         ];
-
         function updateTree(n) {
             treeParts.filter(el => parseInt(el.dataset.s,10) <= n && !el.classList.contains('show'))
                      .forEach((el,i) => setTimeout(() => el.classList.add('show'), i*55));
         }
-
         btn.addEventListener('click', () => {
             complText.style.opacity = '0';
-            setTimeout(() => {
-                complText.textContent = compliments[randInt(0, compliments.length-1)];
-                complText.style.opacity = '1';
-            }, 400);
+            setTimeout(() => { complText.textContent = compliments[randInt(0, compliments.length-1)]; complText.style.opacity = '1'; }, 400);
             if (count >= MAX) return;
             count++;
             fill.style.width = (count/MAX*100) + '%'; fill.classList.add('active');
-            levelText.textContent = count < MAX
-                ? `Moonlight Level  ${count} / ${MAX}`
-                : 'The Moon Tree is in Full Bloom ✦ 🌕';
+            levelText.textContent = count < MAX ? `Moonlight Level  ${count} / ${MAX}` : 'The Moon Tree is in Full Bloom ✦ 🌕';
             updateTree(count);
             if (count === MAX) {
                 treeSvg.classList.add('full-bloom');
@@ -1146,10 +1043,7 @@ const CONFIG = {
             const text = lines[li].text;
             if (!el.classList.contains('typing-cursor')) el.classList.add('typing-cursor');
             if (ci < text.length) { el.textContent += text[ci++]; setTimeout(tick, 28); }
-            else {
-                el.classList.remove('typing-cursor'); li++; ci=0;
-                setTimeout(tick, li < lines.length ? 500 : 0);
-            }
+            else { el.classList.remove('typing-cursor'); li++; ci=0; setTimeout(tick, li < lines.length ? 500 : 0); }
         }
         tick();
     }
@@ -1161,7 +1055,7 @@ const CONFIG = {
         const syms = ['✦','✶','·','⋆','˚','🌙','°','*','♡'];
         const cols = ['#e8c96a','#c4d8f5','#a0b8e8','#f0dfa0','#b0cce8','#f5c0d0'];
         document.addEventListener('click', e => {
-            if (e.target.closest('button') || e.target.closest('.gallery-item') || e.target.closest('#drop-zone') || e.target.closest('#gallery-spotlight')) return;
+            if (e.target.closest('button,.gallery-item,#drop-zone,#gallery-spotlight')) return;
             const f = document.createDocumentFragment();
             for (let i=0; i<9; i++) {
                 const el = document.createElement('div'); el.className = 'click-spark';
