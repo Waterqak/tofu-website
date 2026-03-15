@@ -14,7 +14,7 @@
 const CONFIG = {
 
     /* ── Date you started talking (YYYY-MM-DD) ─────────────── */
-    startDate: '2025-03-20',
+    startDate: '2024-06-01',
 
     /* ── Playlist ───────────────────────────────────────────── */
     playlist: [
@@ -730,9 +730,10 @@ const CONFIG = {
         // Load persisted images first
         loadSavedGallery();
 
-        // Load CONFIG images only if nothing is saved
+        // Load auto-generated or CONFIG images only if nothing is saved
         if (!galleryImages.length) {
-            (CONFIG.gallery || []).forEach(item =>
+            const source = window.GALLERY_DATA || CONFIG.gallery || [];
+            source.forEach(item =>
                 galleryImages.push({ src: item.src, caption: item.caption || '', isBlob: false })
             );
         }
